@@ -1,0 +1,30 @@
+{
+  "name": "osm-korttelit",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:size": "node scripts/check-size.mjs",
+    "symbols": "node scripts/extract-symbol-names.mjs"
+  },
+  "dependencies": {
+    "geomagnetism": "^0.2.0",
+    "jspdf": "^4.2.1",
+    "ol": "^10.11.0",
+    "proj4": "^2.23.0",
+    "svg-control-descriptions": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/proj4": "^2.5.6",
+    "jsdom": "^29.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

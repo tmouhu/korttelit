@@ -1,0 +1,10 @@
+{
+  "name": "Korttelisuunnistus – urban orienteering planner",
+  "short_name": "Korttelisuunnistus",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c2185b",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
