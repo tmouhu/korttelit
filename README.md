@@ -12,6 +12,10 @@ npm run build      # typecheck + production build
 npm run check:size # entry-chunk gzip budget
 ```
 
+## Deploy
+
+Pushing to `main` runs `.github/workflows/deploy.yml` (typecheck, tests, build, size budget) and publishes `dist/` to GitHub Pages. One-time setup: repository **Settings → Pages → Build and deployment → Source: GitHub Actions** (the workflow tries to enable this itself, which needs admin rights). The site is served from `https://tmouhu.github.io/korttelit/`.
+
 Planning documents (epic, stories, enablers, spike results): [plan/](plan/README.md).
 
 ## How it works
