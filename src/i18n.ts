@@ -3,7 +3,7 @@ export type Lang = 'fi' | 'en';
 
 const fi = {
   'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
-  'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Kuvaus', 'tab.export': 'Vie',
+  'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Määrite', 'tab.export': 'Vie',
   'course.name': 'Radan nimi', 'list.code': 'Koodi {code}',
   'paper': 'Paperi', 'orientation': 'Suunta', 'portrait': 'Pysty', 'landscape': 'Vaaka', 'scale': 'Mittakaava',
   'autoRot': 'Kääntö automaattisesti (magneettinen pohjoinen ylös)', 'rotation': 'Kääntö (°)',
