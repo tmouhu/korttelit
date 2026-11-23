@@ -2,13 +2,13 @@ import type Map from 'ol/Map';
 import PointerInteraction from 'ol/interaction/Pointer';
 import type { MapBrowserEvent } from 'ol';
 import { type CourseStore, type PointRef, addControl, crowFlyLength, deletePoint, legLengths, movePoint, reorderControl, sequence, setFinish, setLabelAngle, setStart } from '../core/course';
-import { groundToPaper, mapAreaMm, paperToGround, type PrintSetup } from '../core/printFrame';
+import { groundToPaper, mapAreaMm, northLineXs, paperToGround, type PrintSetup } from '../core/printFrame';
 import { buildDescriptions, type DescriptionSettings } from '../core/descriptions';
 import { drawSheet, sheetSize, sheetSymbolIds } from '../render/descriptionSheet';
 import { ensureSymbols } from '../render/symbols';
 import { CATALOGUE } from '../gen/catalogue';
 import { getLang, numberFormat, t } from '../i18n';
-import { buildCourseScene, COURSE_COLOUR, symbolSpecFor, type SceneItem } from '../core/symbols';
+import { buildCourseScene, COURSE_COLOUR, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor, type SceneItem } from '../core/symbols';
 
 let debugPoints: [number, number, string][] = [];
 let debugOn = false;
@@ -28,7 +28,9 @@ const sameRef = (a: PointRef | null, b: PointRef | null): boolean => !!a && !!b 
 
 export interface DescAccess { get: () => DescriptionSettings; set: (d: DescriptionSettings) => void }
 
-export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: CourseStore, onSetupRequest: () => void, desc: DescAccess): void {
+export interface NorthLines { on: boolean; spacingMm: number }
+
+export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: CourseStore, onSetupRequest: () => void, desc: DescAccess, getNorth: () => NorthLines): void {
   let tool: Tool = 'control';
   let selected: PointRef | null = null;
 
@@ -63,6 +65,13 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
       ctx.restore();
     }
     ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+    const nl = getNorth();
+    if (nl.on) { // magnetic north lines, inside the print frame only
+      const a = mapAreaMm(getSetup());
+      ctx.save(); ctx.strokeStyle = NORTH_LINE_COLOUR; ctx.lineWidth = Math.max(1, NORTH_LINE_MM * k); ctx.beginPath();
+      for (const x of northLineXs(getSetup(), nl.spacingMm)) { const p = paperToPx(x, -a.h / 2), q = paperToPx(x, a.h / 2); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); }
+      ctx.stroke(); ctx.restore();
+    }
     // white halos first so no number is covered by another number's halo
     for (const { prim: p } of scene) {
       if (p.kind !== 'text') continue;
@@ -97,7 +106,7 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
   // ---------- description sheet overlay ----------
   const sheetRect = (): { x: number; y: number; w: number; h: number } => {
     const d = desc.get(); const dd = buildDescriptions(store.course, getSetup().northGridBearingDeg);
-    const sz = sheetSize(dd.lines.length, d.cellMm, dd.legend.length);
+    const sz = sheetSize(dd.lines.length, d.cellMm);
     return { x: d.x, y: d.y, w: sz.w, h: sz.h };
   };
   const pending = new Set<string>();

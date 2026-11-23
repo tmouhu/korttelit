@@ -41,6 +41,9 @@ export function symbolSpecFor(scale: number): SymbolSpec {
 }
 
 export const COURSE_COLOUR = '#b3128c';
+/** Magnetic north lines: blue, 0.15 mm. */
+export const NORTH_LINE_COLOUR = '#1f5fb4';
+export const NORTH_LINE_MM = 0.15;
 
 export type Prim =
   | { kind: 'ring'; x: number; y: number; r: number; width: number }          // r = centre-line radius

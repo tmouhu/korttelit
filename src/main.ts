@@ -146,11 +146,13 @@ $('fit').addEventListener('click', () => {
 const KEY = 'osm-korttelit:v1';
 const store = new CourseStore(emptyCourse(t('course.default')));
 const defaultDescPos = (): { x: number; y: number } => { const a = mapAreaMm(state); return { x: -a.w / 2 + 3, y: -a.h / 2 + 3 }; };
+const north = { on: true, spacingMm: 50 };
 const desc: DescriptionSettings = { include: false, ...defaultDescPos(), cellMm: 6 };
 try {
   const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
   if (saved?.course) store.course = saved.course;
   if (saved?.desc) Object.assign(desc, saved.desc);
+  if (saved?.north) Object.assign(north, saved.north);
   if (saved?.setup) {
     const s = saved.setup;
     Object.assign(state, { centre: s.centre ?? state.centre, paper: s.paper ?? state.paper, orientation: s.orientation ?? state.orientation, scale: s.scale ?? state.scale, autoRotation: s.autoRotation ?? true, manualRotation: s.manualRotation ?? 0 });
@@ -162,7 +164,7 @@ try {
   }
 } catch { /* ignore */ }
 function save(): void {
-  try { localStorage.setItem(KEY, JSON.stringify({ course: store.course, desc, setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, autoRotation: state.autoRotation, manualRotation: state.manualRotation } })); } catch { /* ignore */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ course: store.course, desc, north, setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, autoRotation: state.autoRotation, manualRotation: state.manualRotation } })); } catch { /* ignore */ }
 }
 const baseUpdate = update;
 const descInfo = (): void => {
@@ -171,7 +173,7 @@ const descInfo = (): void => {
   dd.legend.forEach((l) => lines.push(`${l.symbol} = ${CATALOGUE[l.kind]?.label[getLang()] ?? l.kind}`));
   if (dd.unresolvedKinds.length) lines.push(t('desc.noSymbol', { kinds: dd.unresolvedKinds.map((k) => CATALOGUE[k]?.label[getLang()] ?? k).join(', ') }));
   if (desc.include) {
-    const sz = sheetSize(dd.lines.length, desc.cellMm, dd.legend.length);
+    const sz = sheetSize(dd.lines.length, desc.cellMm);
     const hit = [...(store.course.start ? [store.course.start.pos] : []), ...store.course.controls.map((c) => c.pos), ...(store.course.finish ? [store.course.finish.pos] : [])]
       .filter((p): p is { e: number; n: number } => !!p).some((p) => { const q = groundToPaper(state, p); return q.x > desc.x - 4 && q.x < desc.x + sz.w + 4 && q.y > desc.y - 4 && q.y < desc.y + sz.h + 4; });
     if (hit) lines.push(t('desc.overlap'));
@@ -179,7 +181,11 @@ const descInfo = (): void => {
   $('descInfo').innerHTML = lines.map((l) => l.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br>');
 };
 const descAccess = { get: () => desc, set: (d: DescriptionSettings) => { Object.assign(desc, d); } };
-setupCourseUi(map, () => state, store, () => { save(); map.render(); descInfo(); }, descAccess);
+setupCourseUi(map, () => state, store, () => { save(); map.render(); descInfo(); }, descAccess, () => north);
+($('northOn') as HTMLInputElement).checked = north.on;
+($('northSpacing') as HTMLSelectElement).value = String(north.spacingMm);
+$('northOn').addEventListener('change', (e) => { north.on = (e.target as HTMLInputElement).checked; save(); map.render(); });
+$('northSpacing').addEventListener('change', (e) => { north.spacingMm = Number((e.target as HTMLSelectElement).value); save(); map.render(); });
 ($('descInclude') as HTMLInputElement).checked = desc.include;
 ($('descCell') as HTMLSelectElement).value = String(desc.cellMm);
 $('descInclude').addEventListener('change', (e) => { desc.include = (e.target as HTMLInputElement).checked; save(); map.render(); descInfo(); });
@@ -210,7 +216,7 @@ $('pdf').addEventListener('click', async () => {
   const btn = $('pdf') as HTMLButtonElement; btn.disabled = true;
   try {
     const { exportPdf } = await import('./render/pdf');
-    const res = await exportPdf(store.course, { ...state, northGridBearingDeg: state.northGridBearingDeg }, { dpi: Number(($('dpi') as HTMLSelectElement).value), onProgress: status, description: { settings: desc, ownPage: ($('descPage') as HTMLInputElement).checked } });
+    const res = await exportPdf(store.course, { ...state, northGridBearingDeg: state.northGridBearingDeg }, { dpi: Number(($('dpi') as HTMLSelectElement).value), onProgress: status, north, description: { settings: desc, ownPage: ($('descPage') as HTMLInputElement).checked } });
     download(res.blob, `${fileBase()}_${state.paper}_1-${state.scale}.pdf`);
     status(res.warnings.includes('course-outside-frame') ? t('pdf.outside') : t('pdf.done'));
   } catch (e) { status(t('pdf.failed', { msg: (e as Error).message === 'map-image-failed' ? t('pdf.mapFailed') : (e as Error).message })); }

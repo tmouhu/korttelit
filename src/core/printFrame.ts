@@ -82,6 +82,21 @@ export function frameBBox(s: PrintSetup): BBox {
   };
 }
 
+/**
+ * Magnetic north lines: x positions (paper mm from the centre of the map area) of vertical lines `spacingMm` apart.
+ * The lines are anchored to ground coordinates, so they stay on the same ground positions when the frame is moved.
+ */
+export function northLineXs(s: PrintSetup, spacingMm: number): number[] {
+  if (!(spacingMm > 0)) return [];
+  const m = deg2rad(s.northGridBearingDeg);
+  const stepM = (spacingMm * s.scale) / 1000;
+  const uC = s.centre.e * Math.cos(m) - s.centre.n * Math.sin(m); // coordinate across the lines, in ground metres
+  const halfM = (mapAreaMm(s).w / 2) * (s.scale / 1000);
+  const xs: number[] = [];
+  for (let k = Math.ceil((uC - halfM) / stepM); k <= Math.floor((uC + halfM) / stepM); k++) xs.push(((k * stepM - uC) * 1000) / s.scale);
+  return xs;
+}
+
 export const MAPANT_MAX_PX = 4000;
 
 /** Split the frame's bounding box into WMS requests ≤ maxPx per side at the given dpi (rotated image is cropped later). */

@@ -4,7 +4,7 @@ export type Lang = 'fi' | 'en';
 const fi = {
   'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
   'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Määrite', 'tab.export': 'Vie',
-  'course.name': 'Radan nimi', 'list.code': 'Koodi {code}',
+  'course.name': 'Radan nimi', 'list.code': 'Koodi {code}', 'north.lines': 'Pohjoisviivat', 'north.spacing': 'Viivaväli',
   'paper': 'Paperi', 'orientation': 'Suunta', 'portrait': 'Pysty', 'landscape': 'Vaaka', 'scale': 'Mittakaava',
   'autoRot': 'Kääntö automaattisesti (magneettinen pohjoinen ylös)', 'rotation': 'Kääntö (°)',
   'centreFrame': 'Keskitä kehys näkymään', 'fitFrame': 'Zoomaa kehykseen',
@@ -56,7 +56,7 @@ type Key = keyof typeof fi;
 const en: Record<Key, string> = {
   'app.title': 'Korttelit – urban orienteering planner', 'brand.tagline': 'urban orienteering', 'lang.label': 'Language', 'help.open': 'Help',
   'tab.map': 'Map', 'tab.course': 'Course', 'tab.generate': 'Generate', 'tab.desc': 'Descriptions', 'tab.export': 'Export',
-  'course.name': 'Course name', 'list.code': 'Code {code}',
+  'course.name': 'Course name', 'list.code': 'Code {code}', 'north.lines': 'North lines', 'north.spacing': 'Line spacing',
   'paper': 'Paper', 'orientation': 'Orientation', 'portrait': 'Portrait', 'landscape': 'Landscape', 'scale': 'Scale',
   'autoRot': 'Rotate automatically (magnetic north up)', 'rotation': 'Rotation (°)',
   'centreFrame': 'Centre frame in view', 'fitFrame': 'Zoom to frame',

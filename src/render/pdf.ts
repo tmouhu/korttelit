@@ -1,15 +1,15 @@
 import { numberFormat, t } from '../i18n';
 import type { Course } from '../core/course';
 import { crowFlyLength, sequence } from '../core/course';
-import { frameBBox, groundToPaper, mapAreaMm, PAPER_MM, sheetMm, wmsRequests, type PrintSetup } from '../core/printFrame';
+import { frameBBox, groundToPaper, mapAreaMm, northLineXs, PAPER_MM, sheetMm, wmsRequests, type PrintSetup } from '../core/printFrame';
 import { buildDescriptions, type DescriptionSettings } from '../core/descriptions';
 import { drawSheet, sheetSize, sheetSymbolIds } from './descriptionSheet';
 import { ensureSymbols } from './symbols';
-import { buildCourseScene, COURSE_COLOUR, symbolSpecFor } from '../core/symbols';
+import { buildCourseScene, COURSE_COLOUR, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor } from '../core/symbols';
 
 export const MAPANT_WMS = 'https://www.mapant.fi/wms/wms.php';
 
-export interface PdfOptions { dpi: number; onProgress?: (msg: string) => void; includeMap?: boolean; description?: { settings: DescriptionSettings; ownPage: boolean } }
+export interface PdfOptions { dpi: number; onProgress?: (msg: string) => void; includeMap?: boolean; north?: { on: boolean; spacingMm: number }; description?: { settings: DescriptionSettings; ownPage: boolean } }
 export interface PdfResult { blob: Blob; warnings: string[] }
 
 export function wmsUrl(b: { minE: number; minN: number; maxE: number; maxN: number }, w: number, h: number): string {
@@ -78,6 +78,29 @@ async function renderMapCanvas(s: PrintSetup, dpi: number, progress: (m: string)
 const hexToRgb = (h: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
 const fmt = (n: number): string => numberFormat(0).format(n);
 
+/** "Korttelit" credit in the sheet margin: course-symbol mark + wordmark with the "o" drawn as a control circle. */
+function drawBrand(doc: import('jspdf').jsPDF, x: number, y: number): void {
+  const [r, g, b] = hexToRgb(COURSE_COLOUR);
+  const mid = y; // vertical centre line of the credit
+  doc.setDrawColor(r, g, b); doc.setLineWidth(0.25); doc.setLineCap('butt'); doc.setLineJoin('miter');
+  // start triangle → leg → control circle → leg → finish
+  doc.lines([[0, 3], [2.6, -1.5]], x, mid - 1.5 + 0, [1, 1], 'S', true);
+  doc.line(x + 3.0, mid + 0.1, x + 4.3, mid - 0.6);
+  doc.circle(x + 5.5, mid - 1.0, 1.25, 'S');
+  doc.line(x + 6.3, mid + 0.0, x + 7.1, mid + 0.9);
+  doc.circle(x + 7.9, mid + 1.5, 0.75, 'S'); doc.circle(x + 7.9, mid + 1.5, 0.35, 'S');
+  // wordmark
+  const tx = x + 10.2, size = 9;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(size); doc.setTextColor(21, 34, 46);
+  const base = mid + 1.6;
+  doc.text('K', tx, base);
+  const kw = doc.getTextWidth('K');
+  const ringR = 0.95;
+  doc.setLineWidth(0.4); doc.setDrawColor(r, g, b); doc.circle(tx + kw + 0.2 + ringR, base - ringR - 0.15, ringR, 'S');
+  doc.text('rttelit', tx + kw + 0.4 + 2 * ringR, base);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(0);
+}
+
 export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOptions): Promise<PdfResult> {
   const progress = opts.onProgress ?? (() => undefined);
   const warnings: string[] = [];
@@ -101,6 +124,13 @@ export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOpti
     const canvas = await renderMapCanvas(setup, opts.dpi, progress);
     progress(t('pdf.building'));
     doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, area.w, area.h, undefined, 'FAST');
+  }
+
+  // magnetic north lines (under the course)
+  if (opts.north?.on) {
+    const [nr, ng, nb] = hexToRgb(NORTH_LINE_COLOUR);
+    doc.setDrawColor(nr, ng, nb); doc.setLineWidth(NORTH_LINE_MM); doc.setLineCap('butt');
+    for (const x of northLineXs(setup, opts.north.spacingMm)) doc.line(ox + x, margin, ox + x, margin + area.h);
   }
 
   const [r, g, b] = hexToRgb(COURSE_COLOUR);
@@ -137,7 +167,7 @@ export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOpti
     await ensureSymbols(sheetSymbolIds(dd));
     const meta = { title: course.name, lengthM: crowFlyLength(course) };
     const render = (cell: number): { url: string; w: number; h: number } => {
-      const sz = sheetSize(dd.lines.length, cell, dd.legend.length);
+      const sz = sheetSize(dd.lines.length, cell);
       const kk = 600 / 25.4;
       const cv = document.createElement('canvas'); cv.width = Math.ceil(sz.w * kk); cv.height = Math.ceil(sz.h * kk);
       const cx = cv.getContext('2d')!; cx.scale(kk, kk); drawSheet(cx, dd, meta, cell);
@@ -172,6 +202,7 @@ export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOpti
     doc.setFontSize(7); doc.text(`${len} m`, barX + barMm + 2, barY + 1);
     doc.text(t('pdf.attribution'), margin + area.w, barY + 1, { align: 'right' });
     doc.text(t('pdf.north'), margin + area.w, barY + 4, { align: 'right' });
+    drawBrand(doc, margin + area.w / 2 - 14, barY + 0.2);
   }
   return { blob: doc.output('blob'), warnings };
 }

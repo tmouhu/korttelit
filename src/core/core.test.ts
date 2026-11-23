@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { declinationDeg, northInfo } from './declination';
-import { frameCorners, groundSizeM, groundToPaper, paperToGround, wmsRequests, type PrintSetup } from './printFrame';
+import { frameCorners, groundSizeM, groundToPaper, northLineXs, paperToGround, wmsRequests, type PrintSetup } from './printFrame';
 import { lonLatToTM35, tm35ToLonLat, trueNorthGridBearingDeg } from './projection';
 
 const hki = lonLatToTM35({ lon: 24.9384, lat: 60.1699 });
@@ -78,5 +78,26 @@ describe('print frame', () => {
       expect(r.width).toBeLessThanOrEqual(4000);
       expect(r.height).toBeLessThanOrEqual(4000);
     }
+  });
+});
+
+describe('north lines', () => {
+  it('are evenly spaced by the requested paper distance and lie inside the map area', () => {
+    const s = setup({ northGridBearingDeg: 12.3, marginMm: 10 });
+    const xs = northLineXs(s, 50);
+    expect(xs.length).toBeGreaterThanOrEqual(3);
+    xs.slice(1).forEach((x, i) => expect(x - xs[i]!).toBeCloseTo(50, 6));
+    xs.forEach((x) => expect(Math.abs(x)).toBeLessThanOrEqual(95));
+  });
+  it('stay on the same ground lines when the frame moves along the lines (anchored to ground)', () => {
+    const a = setup({ northGridBearingDeg: 10 });
+    const along = { e: a.centre.e + Math.sin((10 * Math.PI) / 180) * 123, n: a.centre.n + Math.cos((10 * Math.PI) / 180) * 123 };
+    const b = { ...a, centre: along };
+    northLineXs(a, 50).forEach((x, i) => expect(northLineXs(b, 50)[i]!).toBeCloseTo(x, 6));
+  });
+  it('moving across by exactly one spacing shifts the lines by one index', () => {
+    const a = setup({ northGridBearingDeg: 0 });
+    const b = { ...a, centre: { e: a.centre.e + 200, n: a.centre.n } }; // 50 mm × 4000 = 200 m
+    expect(northLineXs(b, 50).map((x) => Math.round(x * 1000))).toEqual(northLineXs(a, 50).map((x) => Math.round(x * 1000)));
   });
 });

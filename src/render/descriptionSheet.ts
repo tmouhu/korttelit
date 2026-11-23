@@ -1,4 +1,3 @@
-import { CATALOGUE } from '../gen/catalogue';
 import { COLUMNS, type Descriptions } from '../core/descriptions';
 import { getSymbol } from './symbols';
 
@@ -6,9 +5,9 @@ export interface SheetMeta { title: string; lengthM: number }
 
 export const SHEET_COLS = 8;
 
-/** Size of the sheet in mm: title, length, start, one row per control, finish (+ legend lines). */
-export function sheetSize(nControls: number, cell: number, legendLines = 0): { w: number; h: number } {
-  return { w: SHEET_COLS * cell, h: (4 + nControls) * cell + legendLines * cell * 0.55 };
+/** Size of the sheet in mm: title, length, start, one row per control, finish. */
+export function sheetSize(nControls: number, cell: number): { w: number; h: number } {
+  return { w: SHEET_COLS * cell, h: (4 + nControls) * cell };
 }
 
 /** All symbol ids needed to draw the sheet. */
@@ -26,8 +25,7 @@ const fmtKm = (m: number): string => `${(Math.round(m / 100) / 10).toFixed(1).re
  */
 export function drawSheet(ctx: CanvasRenderingContext2D, d: Descriptions, meta: SheetMeta, cell: number): void {
   const n = d.lines.length;
-  const legend = d.legend.map((l) => `${l.symbol} = ${CATALOGUE[l.kind]?.label.fi ?? l.kind}`);
-  const { w, h } = sheetSize(n, cell, legend.length);
+  const { w, h } = sheetSize(n, cell);
   const tableH = (4 + n) * cell;
   ctx.save();
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
@@ -75,7 +73,5 @@ export function drawSheet(ctx: CanvasRenderingContext2D, d: Descriptions, meta: 
   ctx.lineWidth = 0.35; ctx.beginPath(); ctx.arc(cell * 0.5, (fr + 0.5) * cell, cell * 0.33, 0, Math.PI * 2); ctx.stroke();
   ctx.beginPath(); ctx.arc(cell * 0.5, (fr + 0.5) * cell, cell * 0.2, 0, Math.PI * 2); ctx.stroke();
 
-  // legend for special items (their meaning must be told to competitors)
-  legend.forEach((s, i) => text(s, 0, tableH + cell * 0.3 + i * cell * 0.55, cell * 0.38, 'left'));
   ctx.restore();
 }
