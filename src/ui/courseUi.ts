@@ -230,13 +230,15 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
     seq.forEach((s, i) => {
       const li = document.createElement('li');
       if (sameRef(selected, s.ref)) li.className = 'sel';
-      const name = s.ref.kind === 'start' ? t('list.start') : s.ref.kind === 'finish' ? t('list.finish') : s.label!;
-      const leg = i > 0 ? `<small>${nf.format(lens[i - 1]!)} m</small>` : '<small></small>';
       const ctl = s.ref.kind === 'control' ? c.controls.find((k) => k.id === (s.ref as { id: string }).id) : undefined;
-      const kind = ctl?.kind && CATALOGUE[ctl.kind] ? `<small class="k">${CATALOGUE[ctl.kind]!.label[getLang()]}</small>` : '';
-      li.innerHTML = `<span class="n">${name}</span><span>${leg}${kind}</span>`;
+      const title = s.ref.kind === 'start' ? t('list.start') : s.ref.kind === 'finish' ? t('list.finish') : t('list.code', { code: s.code! });
+      const bits: string[] = [];
+      if (ctl?.kind && CATALOGUE[ctl.kind]) bits.push(CATALOGUE[ctl.kind]!.label[getLang()]);
+      if (i > 0) bits.push(`${nf.format(lens[i - 1]!)} m`);
+      const badge = s.ref.kind === 'start' ? '<span class="badge start">▷</span>' : s.ref.kind === 'finish' ? '<span class="badge finish"></span>' : `<span class="badge">${s.label}</span>`;
+      li.innerHTML = `${badge}<span class="meta"><b>${title}</b><small>${bits.join(' · ')}</small></span>`;
       li.addEventListener('click', () => { selected = s.ref; refresh(); });
-      const btns = document.createElement('span');
+      const btns = document.createElement('span'); btns.className = 'acts';
       const mk = (txt: string, title: string, fn: () => void, disabled = false): void => {
         const b = document.createElement('button'); b.textContent = txt; b.title = title; b.disabled = disabled;
         b.addEventListener('click', (ev) => { ev.stopPropagation(); fn(); }); btns.appendChild(b);

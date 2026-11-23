@@ -3,92 +3,149 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#c2185b" />
-  <title>Korttelisuunnistus</title>
+  <meta name="theme-color" content="#15222E" />
+  <title>Korttelit</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/ui/style.css" />
 </head>
 <body>
-  <aside id="panel">
-    <h1 data-i18n="app.title">Korttelisuunnistus</h1>
-    <div class="two">
-      <label><span data-i18n="lang.label">Kieli</span>
-        <select id="lang"><option value="fi">Suomi</option><option value="en">English</option></select>
-      </label>
-      <button id="helpBtn" data-i18n="help.open">Ohje</button>
+  <header id="top">
+    <a class="brand" href="./" aria-label="Korttelit">
+      <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M5 33 L5 11 L18 22 Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="miter" transform="translate(0 4)"/>
+        <path d="M19 28 L31 21" stroke="currentColor" stroke-width="2.6"/>
+        <circle cx="35" cy="19" r="7.5" fill="none" stroke="#E36CCB" stroke-width="2.8"/>
+        <path d="M36 27 L40 34" stroke="currentColor" stroke-width="2.6"/>
+        <circle cx="41" cy="40" r="4.2" fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <circle cx="41" cy="40" r="1.6" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <span class="word">K<i class="ring"></i>rttelit</span>
+      <span class="tag" data-i18n="brand.tagline">korttelisuunnistus</span>
+    </a>
+    <div class="top-actions">
+      <select id="lang" data-i18n-title="lang.label" class="ghost"><option value="fi">Suomi</option><option value="en">English</option></select>
+      <button id="helpBtn" class="ghost" data-i18n="help.open">Ohje</button>
+      <button id="pdf" class="primary" data-i18n="pdf">Lataa PDF</button>
     </div>
-    <label><span data-i18n="paper">Paperi</span>
-      <select id="paper"><option>A4</option><option>A3</option></select>
-    </label>
-    <label><span data-i18n="orientation">Suunta</span>
-      <select id="orientation"><option value="portrait" data-i18n="portrait">Pysty</option><option value="landscape" data-i18n="landscape">Vaaka</option></select>
-    </label>
-    <label><span data-i18n="scale">Mittakaava</span>
-      <select id="scale">
-        <option value="3000">1:3000</option><option value="4000" selected>1:4000</option>
-        <option value="7500">1:7500</option><option value="10000">1:10000</option><option value="15000">1:15000</option>
-      </select>
-    </label>
-    <label class="row"><input type="checkbox" id="autoRot" checked /> <span data-i18n="autoRot">Kääntö automaattisesti</span></label>
-    <label><span data-i18n="rotation">Kääntö (°)</span> <input type="number" id="rot" step="0.1" disabled /></label>
-    <button id="centre" data-i18n="centreFrame">Keskitä kehys näkymään</button>
-    <button id="fit" data-i18n="fitFrame">Zoomaa kehykseen</button>
-    <p id="warn" class="warn" role="alert"></p>
-    <dl id="info"></dl>
-    <h2 data-i18n="course">Rata</h2>
-    <div class="tools" role="radiogroup">
-      <label><input type="radio" name="tool" value="select" /> <span data-i18n="tool.select">Valitse</span></label>
-      <label><input type="radio" name="tool" value="start" /> <span data-i18n="tool.start">Lähtö</span></label>
-      <label><input type="radio" name="tool" value="control" checked /> <span data-i18n="tool.control">Rasti</span></label>
-      <label><input type="radio" name="tool" value="finish" /> <span data-i18n="tool.finish">Maali</span></label>
-    </div>
-    <div class="two"><button id="undo" data-i18n="undo">Kumoa</button><button id="redo" data-i18n="redo">Tee uudelleen</button></div>
-    <label><span data-i18n="firstNumber">Ensimmäisen rastin numero</span> <input type="number" id="firstNumber" value="31" min="1" /></label>
-    <ul id="courseList"></ul>
-    <p id="stats"></p>
-    <button id="clearCourse" data-i18n="clear">Tyhjennä rata</button>
-    <h2 data-i18n="auto">Automaattinen rata</h2>
-    <p class="hint" data-i18n="auto.hint"></p>
-    <label><span data-i18n="gen.dist">Haluttu pituus</span> <input type="number" id="genDist" value="2000" min="300" step="100" /></label>
-    <label><span data-i18n="gen.tol">Tarkkuus</span>
-      <select id="genTol"><option value="0.05">±5 %</option><option value="0.1" selected>±10 %</option><option value="0.15">±15 %</option></select>
-    </label>
-    <label class="row"><input type="checkbox" id="genForest" /> <span data-i18n="gen.forest"></span></label>
-    <details><summary data-i18n="gen.adv">Lisäasetukset</summary>
-      <label><span data-i18n="gen.min"></span> <input type="number" id="genMin" min="20" /></label>
-      <label><span data-i18n="gen.max"></span> <input type="number" id="genMax" min="50" /></label>
-      <label><span data-i18n="gen.ratio"></span> <input type="number" id="genRatio" value="2.2" step="0.1" min="1.2" /></label>
-      <label class="row"><input type="checkbox" id="genFixSeed" /> <span data-i18n="gen.fixSeed"></span></label>
-      <label><span data-i18n="gen.seed"></span> <input type="number" id="genSeed" value="1" /></label>
-    </details>
-    <label class="row"><input type="checkbox" id="showCands" /> <span data-i18n="gen.cands"></span></label>
-    <button id="gen" data-i18n="gen.go">Luo rata</button>
-    <p class="hint" data-i18n="gen.lockHint"></p>
-    <h2 data-i18n="desc">Rastimääritteet</h2>
-    <label class="row"><input type="checkbox" id="descInclude" /> <span data-i18n="desc.include"></span></label>
-    <label><span data-i18n="desc.cell"></span>
-      <select id="descCell"><option value="5">5 mm</option><option value="6" selected>6 mm</option><option value="7">7 mm</option></select>
-    </label>
-    <label class="row"><input type="checkbox" id="descPage" /> <span data-i18n="desc.page"></span></label>
-    <button id="descEdit" data-i18n="desc.edit"></button>
-    <p id="descInfo" class="hint"></p>
-    <h2 data-i18n="export">Tulosta ja vie</h2>
-    <label><span data-i18n="dpi">Tarkkuus</span>
-      <select id="dpi"><option value="150">150 dpi</option><option value="200">200 dpi</option><option value="300" selected>300 dpi</option></select>
-    </label>
-    <button id="pdf" data-i18n="pdf">Lataa PDF</button>
-    <button id="xmlExport" data-i18n="xmlExport">Vie IOF XML</button>
-    <button id="xmlImport" data-i18n="xmlImport">Tuo IOF XML…</button>
-    <input type="file" id="xmlFile" accept=".xml,text/xml" hidden />
-    <p id="status" role="status"></p>
-    <h2 data-i18n="offline">Offline-käyttö</h2>
-    <button id="prefetch" data-i18n="offline.prefetch"></button>
-    <div class="two"><span id="usage" class="hint"></span><button id="clearCache" data-i18n="offline.clear"></button></div>
-    <p class="attr" data-i18n="attr"></p>
-    <p class="attr"><a href="#" id="aboutBtn" data-i18n="about">Tietoja</a></p>
-  </aside>
-  <div id="map"></div>
+  </header>
+
+  <div id="layout">
+    <aside id="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="map" data-i18n="tab.map">Kartta</button>
+        <button role="tab" data-tab="course" data-i18n="tab.course">Rata</button>
+        <button role="tab" data-tab="generate" data-i18n="tab.generate">Luo rata</button>
+        <button role="tab" data-tab="desc" data-i18n="tab.desc">Kuvaus</button>
+        <button role="tab" data-tab="export" data-i18n="tab.export">Vie</button>
+      </nav>
+
+      <section class="tabpanel" data-panel="map">
+        <div class="grid2">
+          <label><span data-i18n="paper">Paperi</span>
+            <select id="paper"><option>A4</option><option>A3</option></select>
+          </label>
+          <label><span data-i18n="orientation">Suunta</span>
+            <select id="orientation"><option value="portrait" data-i18n="portrait">Pysty</option><option value="landscape" data-i18n="landscape">Vaaka</option></select>
+          </label>
+        </div>
+        <label><span data-i18n="scale">Mittakaava</span>
+          <select id="scale">
+            <option value="3000">1:3000</option><option value="4000" selected>1:4000</option>
+            <option value="7500">1:7500</option><option value="10000">1:10000</option><option value="15000">1:15000</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="autoRot" checked /> <span data-i18n="autoRot">Kääntö automaattisesti</span></label>
+        <label><span data-i18n="rotation">Kääntö (°)</span> <input type="number" id="rot" step="0.1" disabled /></label>
+        <div class="grid2">
+          <button id="centre" data-i18n="centreFrame">Keskitä kehys näkymään</button>
+          <button id="fit" data-i18n="fitFrame">Zoomaa kehykseen</button>
+        </div>
+        <dl id="info"></dl>
+      </section>
+
+      <section class="tabpanel" data-panel="course" hidden>
+        <label><span data-i18n="course.name">Radan nimi</span> <input type="text" id="courseName" maxlength="60" autocomplete="off" /></label>
+        <label><span data-i18n="firstNumber">Ensimmäinen rastikoodi</span> <input type="number" id="firstNumber" value="31" min="1" /></label>
+        <ul id="courseList"></ul>
+        <p id="stats" class="summary"></p>
+        <button id="clearCourse" class="danger" data-i18n="clear">Tyhjennä rata</button>
+      </section>
+
+      <section class="tabpanel" data-panel="generate" hidden>
+        <p class="hint" data-i18n="auto.hint"></p>
+        <label><span data-i18n="gen.dist">Haluttu pituus</span> <input type="number" id="genDist" value="2000" min="300" step="100" /></label>
+        <label><span data-i18n="gen.tol">Tarkkuus</span>
+          <select id="genTol"><option value="0.05">±5 %</option><option value="0.1" selected>±10 %</option><option value="0.15">±15 %</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="genForest" /> <span data-i18n="gen.forest"></span></label>
+        <details><summary data-i18n="gen.adv">Lisäasetukset</summary>
+          <div class="grid2">
+            <label><span data-i18n="gen.min"></span> <input type="number" id="genMin" min="20" /></label>
+            <label><span data-i18n="gen.max"></span> <input type="number" id="genMax" min="50" /></label>
+          </div>
+          <label><span data-i18n="gen.ratio"></span> <input type="number" id="genRatio" value="2.2" step="0.1" min="1.2" /></label>
+          <label class="check"><input type="checkbox" id="genFixSeed" /> <span data-i18n="gen.fixSeed"></span></label>
+          <label><span data-i18n="gen.seed"></span> <input type="number" id="genSeed" value="1" /></label>
+        </details>
+        <label class="check"><input type="checkbox" id="showCands" /> <span data-i18n="gen.cands"></span></label>
+        <button id="gen" class="primary wide" data-i18n="gen.go">Luo rata</button>
+        <p class="hint" data-i18n="gen.lockHint"></p>
+      </section>
+
+      <section class="tabpanel" data-panel="desc" hidden>
+        <label class="check"><input type="checkbox" id="descInclude" /> <span data-i18n="desc.include"></span></label>
+        <label><span data-i18n="desc.cell"></span>
+          <select id="descCell"><option value="5">5 mm</option><option value="6" selected>6 mm</option><option value="7">7 mm</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="descPage" /> <span data-i18n="desc.page"></span></label>
+        <button id="descEdit" data-i18n="desc.edit"></button>
+        <p id="descInfo" class="hint"></p>
+      </section>
+
+      <section class="tabpanel" data-panel="export" hidden>
+        <label><span data-i18n="dpi">Tarkkuus</span>
+          <select id="dpi"><option value="150">150 dpi</option><option value="200">200 dpi</option><option value="300" selected>300 dpi</option></select>
+        </label>
+        <div class="grid2">
+          <button id="xmlExport" data-i18n="xmlExport">Vie IOF XML</button>
+          <button id="xmlImport" data-i18n="xmlImport">Tuo IOF XML…</button>
+        </div>
+        <input type="file" id="xmlFile" accept=".xml,text/xml" hidden />
+        <h3 data-i18n="offline">Offline-käyttö</h3>
+        <button id="prefetch" data-i18n="offline.prefetch"></button>
+        <div class="grid2 center"><span id="usage" class="hint"></span><button id="clearCache" data-i18n="offline.clear"></button></div>
+        <p class="attr" data-i18n="attr"></p>
+        <p class="attr"><a href="#" id="aboutBtn" data-i18n="about">Tietoja</a></p>
+      </section>
+    </aside>
+
+    <main id="stage">
+      <div id="map"></div>
+      <div id="toolbar" role="toolbar">
+        <div class="seg" role="radiogroup">
+          <label class="tool" data-i18n-title="tool.select"><input type="radio" name="tool" value="select" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3 L6 19 L10.5 14.5 L14 21 L16.5 19.8 L13 13.5 L19 13 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            <span data-i18n="tool.select">Valitse</span></label>
+          <label class="tool" data-i18n-title="tool.start"><input type="radio" name="tool" value="start" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20 L5 4 L20 12 Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter"/></svg>
+            <span data-i18n="tool.start">Lähtö</span></label>
+          <label class="tool" data-i18n-title="tool.control"><input type="radio" name="tool" value="control" checked />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.9"/></svg>
+            <span data-i18n="tool.control">Rasti</span></label>
+          <label class="tool" data-i18n-title="tool.finish"><input type="radio" name="tool" value="finish" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            <span data-i18n="tool.finish">Maali</span></label>
+        </div>
+        <span class="sep"></span>
+        <button id="undo" class="icon" data-i18n-title="undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 L4 12 L9 17 M4 12 H15 A5 5 0 0 1 15 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="redo" class="icon" data-i18n-title="redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7 L20 12 L15 17 M20 12 H9 A5 5 0 0 0 9 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <p id="warn" class="warn" role="alert"></p>
+      <div id="status" class="toast" role="status"></div>
+    </main>
+  </div>
+
   <dialog id="help" class="info-dialog">
     <h3 data-i18n="help.title">Ohje</h3>
     <div data-i18n-html="help.body"></div>

@@ -11,7 +11,8 @@ describe('course', () => {
     c = addControl(c, { e: 300, n: 0 });
     c = addControl(c, { e: 300, n: 400 });
     c = setFinish(c, { e: 0, n: 400 });
-    expect(sequence(c).map((s) => s.label)).toEqual([undefined, '31', '32', undefined]);
+    expect(sequence(c).map((s) => s.label)).toEqual([undefined, '1', '2', undefined]);
+    expect(sequence(c).map((s) => s.code)).toEqual([undefined, '31', '32', undefined]);
     expect(legLengths(c)).toEqual([300, 400, 300]);
     expect(crowFlyLength(c)).toBe(1000);
   });
@@ -22,7 +23,7 @@ describe('course', () => {
     c = reorderControl(c, 0, 2);
     expect(c.controls.map((k) => k.pos.e)).toEqual([2, 3, 1]);
     c = deletePoint(c, { kind: 'control', id: c.controls[0]!.id });
-    expect(sequence(c).map((s) => s.label)).toEqual(['31', '32']);
+    expect(sequence(c).map((s) => s.label)).toEqual(['1', '2']);
     expect(movePoint(c, { kind: 'start' }, { e: 1, n: 1 })).toBe(c);
   });
 });
@@ -58,12 +59,12 @@ describe('symbol scene', () => {
     const tri = items.find((i) => i.ref === 'start')!.prim as Extract<typeof items[0]['prim'], { kind: 'polyline' }>;
     expect(tri.pts[0]![1]).toBeLessThan(0); // apex points up toward the control (north)
   });
-  it('control number text is placed away from the leg and carries a 1.5 mm halo', () => {
+  it('control number text is placed away from the leg and carries a narrow white halo', () => {
     let c = setStart(emptyCourse(), { e: 0, n: 0 });
     c = addControl(c, { e: 0, n: 400 });
     const txt = buildCourseScene(c, setup).find((i) => i.prim.kind === 'text')!.prim as Extract<ReturnType<typeof buildCourseScene>[0]['prim'], { kind: 'text' }>;
-    expect(txt.text).toBe('31');
-    expect(txt.haloMm).toBe(1.5);
+    expect(txt.text).toBe('1');
+    expect(txt.haloMm).toBe(0.8);
     expect(Math.abs(txt.x)).toBeGreaterThan(3); // not on the vertical leg
   });
   it('auto label angle avoids incident legs', () => {

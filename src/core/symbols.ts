@@ -26,7 +26,7 @@ const BASE: SymbolSpec = {
   finishInnerOuterDiameterMm: 5.0,
   startTriangleSideMm: 7.0,
   numberHeightMm: 4.0,
-  numberHaloMm: 1.5,
+  numberHaloMm: 0.8,
   labelGapMm: 0.6,
 };
 

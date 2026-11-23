@@ -192,7 +192,11 @@ dragFeatures.on('translateend', () => { save(); map.render(); });
 void baseUpdate;
 
 // ---- export / import ----
-const status = (msg: string): void => { $('status').textContent = msg; };
+let toastTimer: number | undefined;
+const status = (msg: string): void => {
+  const el = $('status'); el.textContent = msg; el.classList.toggle('show', !!msg);
+  window.clearTimeout(toastTimer); if (msg) toastTimer = window.setTimeout(() => el.classList.remove('show'), 9000);
+};
 function download(blob: Blob, name: string): void {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -241,6 +245,27 @@ $('xmlFile').addEventListener('change', async (e) => {
     status(r.warnings.length ? t('xml.importedWarn', { w: r.warnings.join(', ') }) : t('xml.imported'));
   } catch (err) { { const k = `xml.err.${(err as Error).message}`; status(t('xml.failed', { msg: dictHas(k) ? t(k as MessageKey) : (err as Error).message })); } }
 });
+
+// ---- tabs ----
+const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+function showTab(id: string): void {
+  tabButtons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+  document.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== id; });
+  try { localStorage.setItem('osm-korttelit:tab', id); } catch { /* ignore */ }
+}
+tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab!)));
+let startTab = 'map'; try { startTab = localStorage.getItem('osm-korttelit:tab') ?? 'map'; } catch { /* ignore */ }
+showTab(tabButtons.some((b) => b.dataset.tab === startTab) ? startTab : 'map');
+
+// ---- course rename ----
+const nameInput = $('courseName') as HTMLInputElement;
+const syncName = (): void => { if (document.activeElement !== nameInput) nameInput.value = store.course.name; };
+nameInput.addEventListener('change', () => {
+  const v = nameInput.value.trim() || t('course.default');
+  nameInput.value = v;
+  store.commit({ ...store.course, name: v });
+});
+store.subscribe(syncName); syncName();
 
 // ---- language, help, first-run guide (US-30, US-32) ----
 applyStatic();

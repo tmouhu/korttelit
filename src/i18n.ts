@@ -2,14 +2,16 @@
 export type Lang = 'fi' | 'en';
 
 const fi = {
-  'app.title': 'Korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
+  'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
+  'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Kuvaus', 'tab.export': 'Vie',
+  'course.name': 'Radan nimi', 'list.code': 'Koodi {code}',
   'paper': 'Paperi', 'orientation': 'Suunta', 'portrait': 'Pysty', 'landscape': 'Vaaka', 'scale': 'Mittakaava',
   'autoRot': 'Kääntö automaattisesti (magneettinen pohjoinen ylös)', 'rotation': 'Kääntö (°)',
   'centreFrame': 'Keskitä kehys näkymään', 'fitFrame': 'Zoomaa kehykseen',
   'info.area': 'Alue maastossa', 'info.centreE': 'Keskipiste E', 'info.centreN': 'Keskipiste N', 'info.decl': 'Deklinaatio',
   'info.conv': 'Meridiaanikonvergenssi', 'info.rot': 'Kartan kierto', 'info.margin': 'Marginaali',
   'course': 'Rata', 'tool.select': 'Valitse', 'tool.start': 'Lähtö', 'tool.control': 'Rasti', 'tool.finish': 'Maali',
-  'undo': 'Kumoa', 'redo': 'Tee uudelleen', 'firstNumber': 'Ensimmäisen rastin numero', 'clear': 'Tyhjennä rata',
+  'undo': 'Kumoa', 'redo': 'Tee uudelleen', 'firstNumber': 'Ensimmäinen rastikoodi', 'clear': 'Tyhjennä rata',
   'clear.confirm': 'Tyhjennetäänkö rata?', 'list.start': 'Lähtö', 'list.finish': 'Maali', 'up': 'Ylös', 'down': 'Alas', 'delete': 'Poista',
   'lock': 'Lukitse', 'unlock': 'Vapauta',
   'stats': '{n} rastia · {len} m linnuntietä', 'course.default': 'Rata 1',
@@ -52,14 +54,16 @@ const fi = {
 
 type Key = keyof typeof fi;
 const en: Record<Key, string> = {
-  'app.title': 'Urban orienteering planner', 'lang.label': 'Language', 'help.open': 'Help',
+  'app.title': 'Korttelit – urban orienteering planner', 'brand.tagline': 'urban orienteering', 'lang.label': 'Language', 'help.open': 'Help',
+  'tab.map': 'Map', 'tab.course': 'Course', 'tab.generate': 'Generate', 'tab.desc': 'Descriptions', 'tab.export': 'Export',
+  'course.name': 'Course name', 'list.code': 'Code {code}',
   'paper': 'Paper', 'orientation': 'Orientation', 'portrait': 'Portrait', 'landscape': 'Landscape', 'scale': 'Scale',
   'autoRot': 'Rotate automatically (magnetic north up)', 'rotation': 'Rotation (°)',
   'centreFrame': 'Centre frame in view', 'fitFrame': 'Zoom to frame',
   'info.area': 'Ground area', 'info.centreE': 'Centre E', 'info.centreN': 'Centre N', 'info.decl': 'Declination',
   'info.conv': 'Meridian convergence', 'info.rot': 'Map rotation', 'info.margin': 'Margin',
   'course': 'Course', 'tool.select': 'Select', 'tool.start': 'Start', 'tool.control': 'Control', 'tool.finish': 'Finish',
-  'undo': 'Undo', 'redo': 'Redo', 'firstNumber': 'First control number', 'clear': 'Clear course',
+  'undo': 'Undo', 'redo': 'Redo', 'firstNumber': 'First control code', 'clear': 'Clear course',
   'clear.confirm': 'Clear the course?', 'list.start': 'Start', 'list.finish': 'Finish', 'up': 'Up', 'down': 'Down', 'delete': 'Delete',
   'lock': 'Lock', 'unlock': 'Unlock',
   'stats': '{n} controls · {len} m as the crow flies', 'course.default': 'Course 1',
@@ -124,7 +128,7 @@ export const numberFormat = (digits = 0): Intl.NumberFormat => new Intl.NumberFo
 export function applyStatic(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n as Key); });
   root.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml as Key); });
-  root.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle as Key); });
+  root.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => { const s = t(el.dataset.i18nTitle as Key); el.title = s; if (!el.textContent?.trim()) el.setAttribute('aria-label', s); });
   document.documentElement.lang = lang;
   document.title = t('app.title');
 }

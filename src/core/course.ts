@@ -19,7 +19,7 @@ export interface Course {
   start?: { pos: TM35 };
   controls: Control[];
   finish?: { pos: TM35 };
-  /** Number of the first control (default 31). */
+  /** Control code of the first control (default 31); codes are shown on the description sheet and in IOF XML. */
   firstNumber: number;
 }
 
@@ -65,10 +65,11 @@ export function setLabelAngle(c: Course, id: string, deg: number | undefined): C
 }
 
 /** Ordered course points: start, controls, finish (those that exist). */
-export function sequence(c: Course): { ref: PointRef; pos: TM35; label?: string }[] {
-  const out: { ref: PointRef; pos: TM35; label?: string }[] = [];
+/** `label` = sequence number shown on the map (1, 2, 3…); `code` = control code (flag number), counted from firstNumber. */
+export function sequence(c: Course): { ref: PointRef; pos: TM35; label?: string; code?: string }[] {
+  const out: { ref: PointRef; pos: TM35; label?: string; code?: string }[] = [];
   if (c.start) out.push({ ref: { kind: 'start' }, pos: c.start.pos });
-  c.controls.forEach((k, i) => out.push({ ref: { kind: 'control', id: k.id }, pos: k.pos, label: String(c.firstNumber + i) }));
+  c.controls.forEach((k, i) => out.push({ ref: { kind: 'control', id: k.id }, pos: k.pos, label: String(i + 1), code: String(c.firstNumber + i) }));
   if (c.finish) out.push({ ref: { kind: 'finish' }, pos: c.finish.pos });
   return out;
 }

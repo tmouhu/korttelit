@@ -15,20 +15,20 @@ export function exportIofXml(course: Course, setup: SetupData, now = new Date())
   const s = setup as PrintSetup;
   const seq = sequence(course);
   const area = mapAreaMm(s);
-  const idOf = (r: (typeof seq)[number]['ref'], label?: string): string => (r.kind === 'start' ? 'S1' : r.kind === 'finish' ? 'F1' : label!);
+  const idOf = (r: (typeof seq)[number]['ref'], code?: string): string => (r.kind === 'start' ? 'S1' : r.kind === 'finish' ? 'F1' : code!);
   const typeOf = (k: string): string => (k === 'start' ? 'Start' : k === 'finish' ? 'Finish' : 'Control');
 
   const controls = seq.map((p) => {
     const ll = tm35ToLonLat(p.pos);
     const mp = groundToPaper(s, p.pos);
     return `    <Control type="${typeOf(p.ref.kind)}">
-      <Id>${esc(idOf(p.ref, p.label))}</Id>
+      <Id>${esc(idOf(p.ref, p.code))}</Id>
       <Position lng="${f(ll.lon, 7)}" lat="${f(ll.lat, 7)}"/>
       <MapPosition x="${f(mp.x, 3)}" y="${f(mp.y, 3)}" unit="mm"/>
     </Control>`;
   });
   const courseControls = seq.map((p) => `      <CourseControl type="${typeOf(p.ref.kind)}">
-        <Control>${esc(idOf(p.ref, p.label))}</Control>
+        <Control>${esc(idOf(p.ref, p.code))}</Control>
       </CourseControl>`);
   // app-specific per-control data (feature type, corner direction, lock, label angle, description overrides)
   const labelAngles = course.controls.map((c, i) => {

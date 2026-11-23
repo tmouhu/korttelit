@@ -1,4 +1,4 @@
-# Korttelisuunnistus – urban orienteering course planner
+# Korttelit – urban orienteering course planner (korttelisuunnistus)
 
 Browser-only planner for urban orienteering (korttelisuunnistus) in Finland. Pick an area on a MapAnt background in EUREF-FIN TM35 (EPSG:3067), choose A4/A3 and a scale (1:3000 … 1:15000), draw a course or generate one from OSM data, and download a print-ready PDF at true scale. Courses are exchanged as IOF XML 3.0. UI in Finnish and English. No backend.
 
