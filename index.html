@@ -53,8 +53,15 @@
           <select id="scale">
             <option value="3000">1:3000</option><option value="4000" selected>1:4000</option>
             <option value="7500">1:7500</option><option value="10000">1:10000</option><option value="15000">1:15000</option>
+            <option value="custom" data-i18n="scale.custom">Oma…</option>
           </select>
         </label>
+        <div id="scaleCustomRow" hidden>
+          <label><span data-i18n="scale.customLabel">Oma mittakaava 1:</span>
+            <input type="number" id="scaleCustom" min="100" max="50000" step="100" inputmode="numeric" />
+          </label>
+          <p class="hint" data-i18n="scale.hint"></p>
+        </div>
         <label class="check"><input type="checkbox" id="autoRot" checked /> <span data-i18n="autoRot">Kääntö automaattisesti</span></label>
         <label><span data-i18n="rotation">Kääntö (°)</span> <input type="number" id="rot" step="0.1" disabled /></label>
         <div class="grid2">
@@ -148,6 +155,8 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
             <span data-i18n="tool.finish">Maali</span></label>
         </div>
+        <span class="sep"></span>
+        <span id="scaleChip" class="chip" data-i18n-title="scale" aria-live="polite">1:4000</span>
         <span class="sep"></span>
         <button id="undo" class="icon" data-i18n-title="undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 L4 12 L9 17 M4 12 H15 A5 5 0 0 1 15 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button id="redo" class="icon" data-i18n-title="redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7 L20 12 L15 17 M20 12 H9 A5 5 0 0 0 9 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>

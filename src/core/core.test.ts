@@ -101,3 +101,61 @@ describe('north lines', () => {
     expect(northLineXs(b, 50).map((x) => Math.round(x * 1000))).toEqual(northLineXs(a, 50).map((x) => Math.round(x * 1000)));
   });
 });
+
+import { imageTransform } from '../render/pdf';
+import { isValidScale, MAX_SCALE, MIN_SCALE, normaliseScale } from './printFrame';
+import { legDefaults } from '../gen/generator';
+
+describe('scale rules', () => {
+  it('accepts only multiples of 100 between 1:100 and 1:50 000', () => {
+    for (const v of [100, 3000, 4000, 7300, 15000, 50000]) expect(isValidScale(v)).toBe(true);
+    for (const v of [50, 4050, 99, 50100, 60000, 0, -100, 4000.5, NaN]) expect(isValidScale(v)).toBe(false);
+  });
+  it('normalises to the nearest 100 and clamps; never allows smaller than 1:50 000', () => {
+    expect(normaliseScale(4049)).toBe(4000);
+    expect(normaliseScale(4050)).toBe(4100);
+    expect(normaliseScale('7 350')).toBe(7400);
+    expect(normaliseScale('12000,4')).toBe(12000);
+    expect(normaliseScale(75000)).toBe(MAX_SCALE);
+    expect(normaliseScale(10)).toBe(MIN_SCALE);
+    expect(normaliseScale('abc', 5000)).toBe(5000);
+    expect(normaliseScale(-5, 4000)).toBe(4000);
+  });
+  it('keeps the paper size fixed and changes only the ground area when the scale changes', () => {
+    const a = groundSizeM(setup({ scale: 4000 })), b = groundSizeM(setup({ scale: 8000 }));
+    expect(b.w / a.w).toBeCloseTo(2, 9); expect(b.h / a.h).toBeCloseTo(2, 9);
+    const g = groundSizeM(setup({ scale: 50000, paper: 'A3' }));
+    expect([g.w, g.h].map((v) => Math.round(v))).toEqual([14850, 21000]); // 297 mm · 50 m/mm, 420 mm · 50 m/mm (no margins)
+    const gm = groundSizeM(setup({ scale: 50000, paper: 'A3', marginMm: 10 }));
+    expect([gm.w, gm.h].map((v) => Math.round(v))).toEqual([13850, 20000]);
+  });
+  it('leg defaults follow the official table and extend smoothly to custom scales', () => {
+    expect(legDefaults(4000)).toEqual([80, 400]);
+    const mid = legDefaults(5000);
+    expect(mid[0]).toBeGreaterThan(80); expect(mid[0]).toBeLessThan(120);
+    let prev = 0;
+    for (const s of [500, 3000, 5000, 7500, 12000, 15000, 30000, 50000]) { const [mn, mx] = legDefaults(s); expect(mx).toBeGreaterThan(mn); expect(mx).toBeGreaterThanOrEqual(prev); prev = mx; }
+  });
+});
+
+describe('print accuracy', () => {
+  it('map raster and vector overlay agree: every image pixel lands where groundToPaper says, at exactly the print scale', () => {
+    for (const [scale, dpi, rot] of [[4000, 150, 12.3], [7300, 300, 0], [15000, 200, -8.5], [50000, 100, 14]] as const) {
+      const s = setup({ scale, northGridBearingDeg: rot, paper: 'A3', orientation: 'landscape', marginMm: 10 });
+      const kk = dpi / 25.4;
+      const area = { w: 400, h: 277 };
+      const b = { minE: s.centre.e - 3000, maxE: s.centre.e + 5000, minN: s.centre.n - 4000, maxN: s.centre.n + 2000 };
+      const w = 2000, h = 1500;
+      const [ua, ub, uc, ud, ue, uf] = imageTransform(s, b, w, h, kk);
+      for (const [i, j] of [[0, 0], [w, 0], [0, h], [w, h], [731, 402]] as const) {
+        const ground = { e: b.minE + (i * (b.maxE - b.minE)) / w, n: b.maxN - (j * (b.maxN - b.minN)) / h };
+        const p = groundToPaper(s, ground);
+        expect(ua * i + uc * j + ue).toBeCloseTo((p.x + area.w / 2) * kk, 6);
+        expect(ub * i + ud * j + uf).toBeCloseTo((p.y + area.h / 2) * kk, 6);
+      }
+      // one image pixel covers (b.maxE-b.minE)/w ground metres; on paper that is metres*1000/scale mm
+      const metresPerPx = (b.maxE - b.minE) / w;
+      expect(Math.hypot(ua, ub)).toBeCloseTo((metresPerPx * 1000 / scale) * kk, 9);
+    }
+  });
+});

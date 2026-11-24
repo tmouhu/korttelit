@@ -4,6 +4,7 @@ export type Lang = 'fi' | 'en';
 const fi = {
   'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
   'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Määrite', 'tab.export': 'Vie',
+  'scale.custom': 'Oma…', 'scale.customLabel': 'Oma mittakaava 1:', 'scale.hint': 'Jaollinen 100:lla, enintään 1:50000 (ei pienempää).', 'scale.adjusted': 'Mittakaava muutettu arvoon 1:{v} (jaollinen 100:lla, 100–50000).', 'gen.areaTooLarge': 'Alue on liian suuri automaattiselle radalle ({km} km², enintään {max} km²). Valitse pienempi kehys tai suurempi mittakaava.',
   'search.placeholder': 'Hae paikkaa tai osoitetta', 'search.go': 'Hae', 'search.searching': 'Haetaan…', 'search.none': 'Ei tuloksia haulle "{q}".',
   'search.err.network': 'Haku epäonnistui. Tarkista verkkoyhteys ja yritä uudelleen.', 'search.err.rate-limited': 'Hakuja tehtiin liian tiheään. Yritä minuutin kuluttua uudelleen.', 'search.err.too-short': 'Kirjoita vähintään kaksi merkkiä.',
   'search.moved': 'Kehys siirretty: {name}', 'search.outside': 'Paikka on MapAnt-kartan peittoalueen ulkopuolella.',
@@ -59,6 +60,7 @@ type Key = keyof typeof fi;
 const en: Record<Key, string> = {
   'app.title': 'Korttelit – urban orienteering planner', 'brand.tagline': 'urban orienteering', 'lang.label': 'Language', 'help.open': 'Help',
   'tab.map': 'Map', 'tab.course': 'Course', 'tab.generate': 'Generate', 'tab.desc': 'Descriptions', 'tab.export': 'Export',
+  'scale.custom': 'Custom…', 'scale.customLabel': 'Custom scale 1:', 'scale.hint': 'Multiple of 100, at most 1:50000 (nothing smaller).', 'scale.adjusted': 'Scale changed to 1:{v} (multiple of 100, 100–50000).', 'gen.areaTooLarge': 'The area is too large for automatic generation ({km} km², max {max} km²). Choose a smaller frame or a larger scale.',
   'search.placeholder': 'Search place or address', 'search.go': 'Search', 'search.searching': 'Searching…', 'search.none': 'No results for "{q}".',
   'search.err.network': 'Search failed. Check your connection and try again.', 'search.err.rate-limited': 'Too many searches. Try again in a minute.', 'search.err.too-short': 'Type at least two characters.',
   'search.moved': 'Frame moved: {name}', 'search.outside': 'This place is outside the MapAnt coverage.',

@@ -3,8 +3,21 @@ import { deg2rad } from './projection';
 
 export type PaperSize = 'A4' | 'A3';
 export type Orientation = 'portrait' | 'landscape';
+/** The official orienteering map scales offered by default (denominators). */
 export const SCALES = [3000, 4000, 7500, 10000, 15000] as const;
 export type MapScale = (typeof SCALES)[number];
+
+/** Manual scales: a multiple of 100, from 1:100 up to 1:50 000 (nothing smaller than 1:50 000). */
+export const MIN_SCALE = 100;
+export const MAX_SCALE = 50000;
+export const SCALE_STEP = 100;
+export const isValidScale = (v: number): boolean => Number.isInteger(v) && v % SCALE_STEP === 0 && v >= MIN_SCALE && v <= MAX_SCALE;
+/** Round to the nearest multiple of 100 and clamp to the allowed range; non-numbers give `fallback`. */
+export function normaliseScale(v: unknown, fallback = 4000): number {
+  const n = typeof v === 'string' ? Number(v.replace(/\s/g, '').replace(',', '.')) : Number(v);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(n / SCALE_STEP) * SCALE_STEP));
+}
 
 export const PAPER_MM: Record<PaperSize, { w: number; h: number }> = {
   A4: { w: 210, h: 297 },

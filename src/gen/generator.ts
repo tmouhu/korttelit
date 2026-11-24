@@ -18,8 +18,25 @@ export interface GenSettings {
 
 export const LEG_DEFAULTS: Record<number, [number, number]> = { 3000: [60, 300], 4000: [80, 400], 7500: [120, 700], 10000: [150, 900], 15000: [200, 1300] };
 
+/** Default min/max leg length (m) for any scale: interpolated between the official scales, scaled proportionally outside them. */
+export function legDefaults(scale: number): [number, number] {
+  const pts = Object.entries(LEG_DEFAULTS).map(([k, v]) => [Number(k), v] as const).sort((a, b) => a[0] - b[0]);
+  const first = pts[0]!, last = pts[pts.length - 1]!;
+  const round5 = (x: number): number => Math.max(10, Math.round(x / 5) * 5);
+  if (scale <= first[0]) return [round5(first[1][0] * scale / first[0]), round5(first[1][1] * scale / first[0])];
+  if (scale >= last[0]) return [round5(last[1][0] * scale / last[0]), round5(last[1][1] * scale / last[0])];
+  for (let i = 1; i < pts.length; i++) {
+    const [s0, v0] = pts[i - 1]!, [s1, v1] = pts[i]!;
+    if (scale <= s1) { const f = (scale - s0) / (s1 - s0); return [round5(v0[0] + f * (v1[0] - v0[0])), round5(v0[1] + f * (v1[1] - v0[1]))]; }
+  }
+  return last[1];
+}
+
+/** Largest frame (ground area) the in-browser generator accepts, in m². */
+export const MAX_GEN_AREA_M2 = 60e6;
+
 export function defaultSettings(scale: number, targetM: number, seed = 1): GenSettings {
-  const [minLegM, maxLegM] = LEG_DEFAULTS[scale] ?? [80, 400];
+  const [minLegM, maxLegM] = LEG_DEFAULTS[scale] ?? legDefaults(scale);
   return { targetM, tolerance: 0.1, minLegM, maxLegM, maxRatio: 2.2, minSepM: 40, seed, timeBudgetMs: 4000 };
 }
 

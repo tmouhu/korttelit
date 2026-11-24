@@ -21,8 +21,8 @@ import { setupCourseUi, setDebugPoints } from './ui/courseUi';
 import { buildDescriptions, type DescriptionSettings } from './core/descriptions';
 import { sheetSize } from './render/descriptionSheet';
 import { CATALOGUE } from './gen/catalogue';
-import { frameBBox, groundToPaper, mapAreaMm, wmsRequests } from './core/printFrame';
-import { defaultSettings } from './gen/generator';
+import { frameBBox, groundToPaper, mapAreaMm, normaliseScale, wmsRequests } from './core/printFrame';
+import { defaultSettings, MAX_GEN_AREA_M2 } from './gen/generator';
 import type { Slot } from './gen/generator';
 import { newControlId } from './core/course';
 
@@ -121,7 +121,34 @@ map.addInteraction(dragFeatures);
 
 $('paper').addEventListener('change', (e) => { state.paper = (e.target as HTMLSelectElement).value as PaperSize; update(); });
 $('orientation').addEventListener('change', (e) => { state.orientation = (e.target as HTMLSelectElement).value as Orientation; update(); });
-$('scale').addEventListener('change', (e) => { state.scale = Number((e.target as HTMLSelectElement).value); update(); });
+// ---- scale: official scales in the list, or a custom one (multiple of 100, 1:100 … 1:50 000) ----
+const OFFICIAL = ['3000', '4000', '7500', '10000', '15000'];
+const scaleSel = $('scale') as HTMLSelectElement, scaleCustom = $('scaleCustom') as HTMLInputElement;
+/**
+ * Show `state.scale` in the select / custom field and the chip on the map.
+ * `mode`: 'state' = official scale → list entry, anything else → "Custom"; 'keep' = leave the current choice alone
+ * (so a typed custom value that happens to equal an official scale does not make the field vanish while typing).
+ */
+function showScale(mode: 'state' | 'keep' = 'state'): void {
+  const official = OFFICIAL.includes(String(state.scale));
+  if (mode === 'state') scaleSel.value = official ? String(state.scale) : 'custom';
+  $('scaleCustomRow').hidden = scaleSel.value !== 'custom';
+  if (scaleSel.value === 'custom' && document.activeElement !== scaleCustom) scaleCustom.value = String(state.scale);
+  $('scaleChip').textContent = `1:${state.scale}`;
+}
+function applyScale(raw: unknown, announce = false, mode: 'state' | 'keep' = 'state'): void {
+  const v = normaliseScale(raw, state.scale);
+  if (announce) status(String(raw).trim() !== String(v) ? t('scale.adjusted', { v }) : '');
+  state.scale = v;
+  if (announce) scaleCustom.value = String(v);
+  showScale(mode); update(); syncLegDefaults(); save(); map.render();
+}
+scaleSel.addEventListener('change', () => {
+  if (scaleSel.value === 'custom') { showScale('keep'); scaleCustom.focus(); scaleCustom.select(); return; }
+  applyScale(scaleSel.value);
+});
+scaleCustom.addEventListener('change', () => applyScale(scaleCustom.value, true, 'keep'));
+scaleCustom.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyScale(scaleCustom.value, true, 'keep'); });
 $('autoRot').addEventListener('change', (e) => {
   state.autoRotation = (e.target as HTMLInputElement).checked;
   if (!state.autoRotation) state.manualRotation = state.northGridBearingDeg;
@@ -158,10 +185,9 @@ try {
   if (saved?.north) Object.assign(north, saved.north);
   if (saved?.setup) {
     const s = saved.setup;
-    Object.assign(state, { centre: s.centre ?? state.centre, paper: s.paper ?? state.paper, orientation: s.orientation ?? state.orientation, scale: s.scale ?? state.scale, autoRotation: s.autoRotation ?? true, manualRotation: s.manualRotation ?? 0 });
+    Object.assign(state, { centre: s.centre ?? state.centre, paper: s.paper ?? state.paper, orientation: s.orientation ?? state.orientation, scale: normaliseScale(s.scale, state.scale), autoRotation: s.autoRotation ?? true, manualRotation: s.manualRotation ?? 0 });
     ($('paper') as HTMLSelectElement).value = state.paper;
     ($('orientation') as HTMLSelectElement).value = state.orientation;
-    ($('scale') as HTMLSelectElement).value = String(state.scale);
     ($('autoRot') as HTMLInputElement).checked = state.autoRotation;
     ($('firstNumber') as HTMLInputElement).value = String(store.course.firstNumber);
   }
@@ -196,7 +222,7 @@ $('descCell').addEventListener('change', (e) => { desc.cellMm = Number((e.target
 $('descEdit').addEventListener('click', async () => { const { openDescriptionEditor } = await import('./ui/descriptionEditor'); openDescriptionEditor(store, () => state.northGridBearingDeg, () => { save(); map.render(); }); });
 descInfo();
 map.on('postrender', () => { /* overlay redraws itself */ });
-['paper', 'orientation', 'scale', 'autoRot', 'rot'].forEach((id) => $(id).addEventListener('change', () => { save(); map.render(); }));
+['paper', 'orientation', 'autoRot', 'rot'].forEach((id) => $(id).addEventListener('change', () => { save(); map.render(); }));
 dragFeatures.on('translateend', () => { save(); map.render(); });
 void baseUpdate;
 
@@ -240,13 +266,13 @@ $('xmlFile').addEventListener('change', async (e) => {
     const r = importIofXml(await file.text());
     if (store.course.controls.length && !confirm(t('xml.replace'))) return;
     const s = r.setup ?? {};
-    Object.assign(state, { ...(s.centre ? { centre: s.centre } : {}), ...(s.paper ? { paper: s.paper } : {}), ...(s.orientation ? { orientation: s.orientation } : {}), ...(s.scale ? { scale: s.scale } : {}), ...(s.marginMm !== undefined ? { marginMm: s.marginMm } : {}) });
+    Object.assign(state, { ...(s.centre ? { centre: s.centre } : {}), ...(s.paper ? { paper: s.paper } : {}), ...(s.orientation ? { orientation: s.orientation } : {}), ...(s.scale ? { scale: normaliseScale(s.scale, state.scale) } : {}), ...(s.marginMm !== undefined ? { marginMm: s.marginMm } : {}) });
     // keep automatic rotation unless the file carries a rotation that differs from the computed one
     const auto = northInfo(state.centre).magneticNorthGridBearingDeg;
     if (s.northGridBearingDeg !== undefined && Math.abs(s.northGridBearingDeg - auto) > 0.05) { state.autoRotation = false; state.manualRotation = s.northGridBearingDeg; }
     else state.autoRotation = true;
     ($('paper') as HTMLSelectElement).value = state.paper; ($('orientation') as HTMLSelectElement).value = state.orientation;
-    ($('scale') as HTMLSelectElement).value = String(state.scale); ($('autoRot') as HTMLInputElement).checked = state.autoRotation;
+    showScale(); ($('autoRot') as HTMLInputElement).checked = state.autoRotation;
     ($('firstNumber') as HTMLInputElement).value = String(r.course.firstNumber);
     if (s.desc) { Object.assign(desc, s.desc); ($('descInclude') as HTMLInputElement).checked = desc.include; ($('descCell') as HTMLSelectElement).value = String(desc.cellMm); }
     store.commit(r.course);
@@ -345,13 +371,14 @@ const syncLegDefaults = (): void => {
   ($('genMin') as HTMLInputElement).value = String(s.minLegM); ($('genMax') as HTMLInputElement).value = String(s.maxLegM);
 };
 syncLegDefaults();
-$('scale').addEventListener('change', syncLegDefaults);
 $('showCands').addEventListener('change', (e) => setDebugPoints(null, (e.target as HTMLInputElement).checked));
 $('gen').addEventListener('click', async () => {
   const btn = $('gen') as HTMLButtonElement;
   if (cancelGen) { cancelGen(); return; }
   const c = store.course;
   if (!c.start) { status(t('gen.needStart')); return; }
+  const gs = groundSizeM(state);
+  if (gs.w * gs.h > MAX_GEN_AREA_M2) { status(t('gen.areaTooLarge', { km: numberFormat(0).format((gs.w * gs.h) / 1e6), max: MAX_GEN_AREA_M2 / 1e6 })); return; }
   const num = (id: string): number => Number(($(id) as HTMLInputElement).value);
   const seed = ($('genFixSeed') as HTMLInputElement).checked ? num('genSeed') : Math.floor(Math.random() * 1e6);
   const settings = { ...defaultSettings(state.scale, num('genDist'), seed), tolerance: Number(($('genTol') as HTMLSelectElement).value), minLegM: num('genMin'), maxLegM: num('genMax'), maxRatio: num('genRatio') };
@@ -375,6 +402,7 @@ $('gen').addEventListener('click', async () => {
   } finally { cancelGen = null; btn.textContent = t('gen.go'); }
 });
 
+showScale();
 update();
 // On every page load, start at the (restored) frame instead of a fixed location.
 if (map.getSize()?.[0]) fitToFrame(); else map.once('change:size', fitToFrame);

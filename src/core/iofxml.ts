@@ -1,6 +1,6 @@
 import type { DescriptionSettings } from './descriptions';
 import { type Course, type Control, type DescColumn, crowFlyLength, newControlId, sequence } from './course';
-import { groundToPaper, mapAreaMm, type PrintSetup, type PaperSize, type Orientation } from './printFrame';
+import { groundToPaper, mapAreaMm, normaliseScale, type PrintSetup, type PaperSize, type Orientation } from './printFrame';
 import { lonLatToTM35, tm35ToLonLat, type TM35 } from './projection';
 
 const IOF_NS = 'http://www.orienteering.org/datastandard/3.0';
@@ -134,7 +134,7 @@ export function importIofXml(text: string): ImportResult {
       ...(e !== undefined && nn !== undefined && Number.isFinite(e) && Number.isFinite(nn) ? { centre: { e, n: nn } } : {}),
       ...(el.getAttribute('paper') === 'A3' || el.getAttribute('paper') === 'A4' ? { paper: el.getAttribute('paper') as PaperSize } : {}),
       ...(el.getAttribute('orientation') === 'portrait' || el.getAttribute('orientation') === 'landscape' ? { orientation: el.getAttribute('orientation') as Orientation } : {}),
-      ...(n('scale') ? { scale: n('scale')! } : {}),
+      ...(n('scale') ? { scale: normaliseScale(n('scale')) } : {}),
       ...(n('marginMm') !== undefined ? { marginMm: n('marginMm')! } : {}),
       ...(n('northGridBearingDeg') !== undefined ? { northGridBearingDeg: n('northGridBearingDeg')! } : {}),
     };
@@ -157,7 +157,7 @@ export function importIofXml(text: string): ImportResult {
     const sc = Number(kid(kid(rcd, 'Map') ?? rcd, 'Scale')?.textContent);
     const pts = sequence(course).map((p) => p.pos);
     setup = {
-      ...(Number.isFinite(sc) && sc > 0 ? { scale: sc } : {}),
+      ...(Number.isFinite(sc) && sc > 0 ? { scale: normaliseScale(sc) } : {}),
       ...(pts.length ? { centre: { e: (Math.min(...pts.map((p) => p.e)) + Math.max(...pts.map((p) => p.e))) / 2, n: (Math.min(...pts.map((p) => p.n)) + Math.max(...pts.map((p) => p.n))) / 2 } } : {}),
     };
   }
