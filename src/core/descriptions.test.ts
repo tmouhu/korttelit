@@ -43,3 +43,10 @@ describe('automatic descriptions', () => {
     expect(buildDescriptions(mk([{ id: 'x', pos: { e: 0, n: 0 } }]), 0).lines[0]!.row).toEqual({});
   });
 });
+
+import { sheetSize } from '../render/descriptionSheet';
+describe('description sheet size', () => {
+  it('has no title row: length + start + controls + finish rows', () => {
+    expect(sheetSize(6, 6)).toEqual({ w: 48, h: 54 }); // (3 + 6) rows × 6 mm
+  });
+});

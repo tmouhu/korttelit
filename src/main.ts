@@ -136,11 +136,14 @@ $('centre').addEventListener('click', () => {
   state.centre = { e: c[0]!, n: c[1]! };
   update();
 });
-$('fit').addEventListener('click', () => {
-  const g = frameFeature.getGeometry()!;
-  map.getView().fit(g.getExtent(), { padding: [30, 30, 30, 30], size: map.getSize() });
-  map.getView().setRotation(-deg2rad(state.northGridBearingDeg));
-});
+/** Zoom the map to the print frame (keeps it clear of the floating toolbar). */
+function fitToFrame(): void {
+  map.updateSize();
+  const v = map.getView();
+  v.setRotation(-deg2rad(state.northGridBearingDeg));
+  v.fit(frameFeature.getGeometry()!, { padding: [84, 30, 30, 30], size: map.getSize(), duration: 0 });
+}
+$('fit').addEventListener('click', fitToFrame);
 
 // ---- course + autosave (localStorage; failures are ignored) ----
 const KEY = 'osm-korttelit:v1';
@@ -247,10 +250,19 @@ $('xmlFile').addEventListener('change', async (e) => {
     ($('firstNumber') as HTMLInputElement).value = String(r.course.firstNumber);
     if (s.desc) { Object.assign(desc, s.desc); ($('descInclude') as HTMLInputElement).checked = desc.include; ($('descCell') as HTMLSelectElement).value = String(desc.cellMm); }
     store.commit(r.course);
-    update(); map.getView().setCenter([state.centre.e, state.centre.n]);
+    update(); fitToFrame();
     status(r.warnings.length ? t('xml.importedWarn', { w: r.warnings.join(', ') }) : t('xml.imported'));
   } catch (err) { { const k = `xml.err.${(err as Error).message}`; status(t('xml.failed', { msg: dictHas(k) ? t(k as MessageKey) : (err as Error).message })); } }
 });
+
+// ---- place search (Nominatim) ----
+const MAPANT = { minE: 41637, minN: 6580234, maxE: 754341, maxN: 7800842 };
+void import('./ui/search').then(({ setupSearch }) => setupSearch((pos, place) => {
+  state.centre = pos;
+  update(); fitToFrame(); save();
+  const outside = pos.e < MAPANT.minE || pos.e > MAPANT.maxE || pos.n < MAPANT.minN || pos.n > MAPANT.maxN;
+  status(t('search.moved', { name: place.title }) + (outside ? ` ${t('search.outside')}` : ''));
+}, status));
 
 // ---- tabs ----
 const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab]'));
@@ -364,4 +376,6 @@ $('gen').addEventListener('click', async () => {
 });
 
 update();
+// On every page load, start at the (restored) frame instead of a fixed location.
+if (map.getSize()?.[0]) fitToFrame(); else map.once('change:size', fitToFrame);
 (window as unknown as { __app: unknown }).__app = { state, map, store };

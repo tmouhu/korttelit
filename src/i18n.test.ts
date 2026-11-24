@@ -10,7 +10,7 @@ describe('i18n', () => {
   });
   it('every data-i18n key used in index.html exists', () => {
     const html = readFileSync('index.html', 'utf8');
-    const keys = [...html.matchAll(/data-i18n(?:-title|-html)?="([^"]+)"/g)].map((m) => m[1]!);
+    const keys = [...html.matchAll(/data-i18n(?:-title|-html|-ph)?="([^"]+)"/g)].map((m) => m[1]!);
     expect(keys.length).toBeGreaterThan(30);
     setLang('en');
     for (const k of keys) expect(t(k as never)).not.toBe(k);

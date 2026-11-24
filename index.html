@@ -128,6 +128,11 @@
 
     <main id="stage">
       <div id="map"></div>
+      <form id="search" role="search" autocomplete="off">
+        <input id="q" type="search" maxlength="120" data-i18n-ph="search.placeholder" data-i18n-title="search.placeholder" />
+        <button type="submit" class="icon" data-i18n-title="search.go"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15 L20.5 20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <ul id="results" role="list" hidden></ul>
+      </form>
       <div id="toolbar" role="toolbar">
         <div class="seg" role="radiogroup">
           <label class="tool" data-i18n-title="tool.select"><input type="radio" name="tool" value="select" />

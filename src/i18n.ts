@@ -4,6 +4,9 @@ export type Lang = 'fi' | 'en';
 const fi = {
   'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
   'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Määrite', 'tab.export': 'Vie',
+  'search.placeholder': 'Hae paikkaa tai osoitetta', 'search.go': 'Hae', 'search.searching': 'Haetaan…', 'search.none': 'Ei tuloksia haulle "{q}".',
+  'search.err.network': 'Haku epäonnistui. Tarkista verkkoyhteys ja yritä uudelleen.', 'search.err.rate-limited': 'Hakuja tehtiin liian tiheään. Yritä minuutin kuluttua uudelleen.', 'search.err.too-short': 'Kirjoita vähintään kaksi merkkiä.',
+  'search.moved': 'Kehys siirretty: {name}', 'search.outside': 'Paikka on MapAnt-kartan peittoalueen ulkopuolella.',
   'course.name': 'Radan nimi', 'list.code': 'Koodi {code}', 'north.lines': 'Pohjoisviivat', 'north.spacing': 'Viivaväli',
   'paper': 'Paperi', 'orientation': 'Suunta', 'portrait': 'Pysty', 'landscape': 'Vaaka', 'scale': 'Mittakaava',
   'autoRot': 'Kääntö automaattisesti (magneettinen pohjoinen ylös)', 'rotation': 'Kääntö (°)',
@@ -38,14 +41,14 @@ const fi = {
   'xml.saved': 'IOF XML tallennettu.', 'xml.replace': 'Korvataanko nykyinen rata tuodulla radalla?', 'xml.imported': 'Rata tuotu.', 'xml.importedWarn': 'Tuotu varoituksin: {w}', 'xml.failed': 'Tuonti epäonnistui: {msg}',
   'xml.err.invalid-xml': 'Tiedosto ei ole kelvollista XML:ää.', 'xml.err.not-coursedata': 'Tiedosto ei ole IOF XML -ratatiedosto (CourseData).', 'xml.err.no-course': 'Tiedostossa ei ole rataa.',
   'xml.err.no-race-course-data': 'Tiedostossa ei ole rata-aineistoa.', 'xml.err.no-geographic-positions': 'Rastien maantieteellisiä koordinaatteja (Position) ei löytynyt, joten rastien paikkaa kartalla ei voi päätellä.',
-  'attr': 'Taustakartta: MapAnt.fi (CC BY 4.0, Maanmittauslaitos). Karttadata: © OpenStreetMapin tekijät (ODbL).',
+  'attr': 'Taustakartta: MapAnt.fi (CC BY 4.0, Maanmittauslaitos). Karttadata ja paikkahaku (Nominatim): © OpenStreetMapin tekijät (ODbL).',
   'warn.outside': 'Tulostuskehys ylittää MapAnt-kartan peittoalueen (Suomi). Alueen kartta puuttuu.',
   'warn.large': 'Suuri kuva ({mp} Mpx): PDF voi epäonnistua selaimessa. Valitse pienempi tarkkuus.',
   'disclaimer': 'Turvallisuus: Tarkista rata paikan päällä ennen käyttöä. Rastit ja reitit perustuvat karttadataan, joka voi olla vanhentunutta tai virheellistä. Varmista, ettei rata johda yksityisille alueille, vaarallisten teiden yli tai talviolosuhteissa vaarallisiin paikkoihin. Käytät työkalua omalla vastuullasi.\n\nJatketaanko?',
   'help.title': 'Ohje',
   'help.body': '<ol><li>Valitse paperi, mittakaava ja suunta. Raahaa punaista kehystä reunasta tai paina "Keskitä kehys näkymään".</li><li>Aseta <b>Lähtö</b>, rastit ja <b>Maali</b> klikkaamalla karttaa. Raahaa rasteja ja numeroita liikuttaaksesi niitä; lisää rasti klikkaamalla väliosaa.</li><li>Tai syötä pituus ja paina <b>Luo rata</b>: rastit valitaan OpenStreetMap-datasta ja tarkistetaan reitittämällä.</li><li>Rastimääritteet luodaan automaattisesti; raahaa taulukko haluamaasi paikkaan kartalla.</li><li><b>Lataa PDF</b> tulostaa kartan oikeassa mittakaavassa (tulosta 100 %). <b>Vie IOF XML</b> tallentaa radan muille ohjelmille.</li></ol><p>Kartta kierretään niin, että magneettinen pohjoinen on ylhäällä (deklinaatio miinus meridiaanikonvergenssi). Kaikki laskenta tapahtuu selaimessasi.</p>',
   'help.close': 'Sulje',
-  'about': 'Tietoja', 'about.body': 'Taustakartta: MapAnt.fi / Maanmittauslaitos (CC BY 4.0). OSM-data © OpenStreetMapin tekijät (ODbL). Rastimääritteiden symbolit: svg-control-descriptions (Purple Pen). Työkalu on harjoituskäyttöön; ei takuita.',
+  'about': 'Tietoja', 'about.body': 'Taustakartta: MapAnt.fi / Maanmittauslaitos (CC BY 4.0). OSM-data © OpenStreetMapin tekijät (ODbL). Rastimääritteiden symbolit: svg-control-descriptions (Purple Pen). Paikkahaku: Nominatim (nominatim.openstreetmap.org); hakusana lähetetään sille vasta kun painat Hae. Työkalu on harjoituskäyttöön; ei takuita.',
   'offline.ready': 'Sovellus toimii nyt myös ilman verkkoa (kartta-aineisto vain jo ladatulta alueelta).',
   'offline': 'Offline-käyttö', 'offline.prefetch': 'Tallenna alue offline-käyttöön', 'offline.prefetching': 'Tallennetaan aluetta {i}/{n}…',
   'offline.done': 'Alue tallennettu: kartta ja OSM-data ovat käytettävissä ilman verkkoa.', 'offline.failed': 'Tallennus epäonnistui: {msg}',
@@ -56,6 +59,9 @@ type Key = keyof typeof fi;
 const en: Record<Key, string> = {
   'app.title': 'Korttelit – urban orienteering planner', 'brand.tagline': 'urban orienteering', 'lang.label': 'Language', 'help.open': 'Help',
   'tab.map': 'Map', 'tab.course': 'Course', 'tab.generate': 'Generate', 'tab.desc': 'Descriptions', 'tab.export': 'Export',
+  'search.placeholder': 'Search place or address', 'search.go': 'Search', 'search.searching': 'Searching…', 'search.none': 'No results for "{q}".',
+  'search.err.network': 'Search failed. Check your connection and try again.', 'search.err.rate-limited': 'Too many searches. Try again in a minute.', 'search.err.too-short': 'Type at least two characters.',
+  'search.moved': 'Frame moved: {name}', 'search.outside': 'This place is outside the MapAnt coverage.',
   'course.name': 'Course name', 'list.code': 'Code {code}', 'north.lines': 'North lines', 'north.spacing': 'Line spacing',
   'paper': 'Paper', 'orientation': 'Orientation', 'portrait': 'Portrait', 'landscape': 'Landscape', 'scale': 'Scale',
   'autoRot': 'Rotate automatically (magnetic north up)', 'rotation': 'Rotation (°)',
@@ -90,14 +96,14 @@ const en: Record<Key, string> = {
   'xml.saved': 'IOF XML saved.', 'xml.replace': 'Replace the current course with the imported one?', 'xml.imported': 'Course imported.', 'xml.importedWarn': 'Imported with warnings: {w}', 'xml.failed': 'Import failed: {msg}',
   'xml.err.invalid-xml': 'The file is not valid XML.', 'xml.err.not-coursedata': 'The file is not an IOF XML course file (CourseData).', 'xml.err.no-course': 'The file contains no course.',
   'xml.err.no-race-course-data': 'The file contains no course data.', 'xml.err.no-geographic-positions': 'No geographic control positions (Position) found, so control locations on the map cannot be determined.',
-  'attr': 'Background map: MapAnt.fi (CC BY 4.0, National Land Survey of Finland). Map data: © OpenStreetMap contributors (ODbL).',
+  'attr': 'Background map: MapAnt.fi (CC BY 4.0, National Land Survey of Finland). Map data and place search (Nominatim): © OpenStreetMap contributors (ODbL).',
   'warn.outside': 'The print frame extends beyond the MapAnt coverage (Finland). Map is missing there.',
   'warn.large': 'Large image ({mp} Mpx): the PDF may fail in the browser. Choose a lower resolution.',
   'disclaimer': 'Safety: check the course on site before use. Controls and routes are based on map data that may be outdated or wrong. Make sure the course does not lead onto private land, across dangerous roads, or into hazards in winter conditions. You use this tool at your own risk.\n\nContinue?',
   'help.title': 'Help',
   'help.body': '<ol><li>Choose paper, scale and orientation. Drag the red frame by its outline or press "Centre frame in view".</li><li>Place the <b>Start</b>, controls and <b>Finish</b> by clicking the map. Drag controls and numbers to move them; click on a leg to insert a control.</li><li>Or enter a length and press <b>Generate course</b>: controls are chosen from OpenStreetMap data and checked by routing.</li><li>Control descriptions are generated automatically; drag the table where you want it on the map.</li><li><b>Download PDF</b> prints the map at the true scale (print at 100 %). <b>Export IOF XML</b> saves the course for other software.</li></ol><p>The map is rotated so magnetic north is up (declination minus meridian convergence). All computation happens in your browser.</p>',
   'help.close': 'Close',
-  'about': 'About', 'about.body': 'Background map: MapAnt.fi / National Land Survey of Finland (CC BY 4.0). OSM data © OpenStreetMap contributors (ODbL). Description symbols: svg-control-descriptions (Purple Pen). For training use; no warranty.',
+  'about': 'About', 'about.body': 'Background map: MapAnt.fi / National Land Survey of Finland (CC BY 4.0). OSM data © OpenStreetMap contributors (ODbL). Description symbols: svg-control-descriptions (Purple Pen). Place search: Nominatim (nominatim.openstreetmap.org); your search text is sent to it only when you press Search. For training use; no warranty.',
   'offline.ready': 'The app now also works offline (map data only for areas already loaded).',
   'offline': 'Offline use', 'offline.prefetch': 'Save area for offline use', 'offline.prefetching': 'Saving area {i}/{n}…',
   'offline.done': 'Area saved: the map and OSM data are available without a network.', 'offline.failed': 'Saving failed: {msg}',
@@ -128,6 +134,7 @@ export const numberFormat = (digits = 0): Intl.NumberFormat => new Intl.NumberFo
 export function applyStatic(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n as Key); });
   root.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml as Key); });
+  root.querySelectorAll<HTMLInputElement>('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh as Key); });
   root.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => { const s = t(el.dataset.i18nTitle as Key); el.title = s; if (!el.textContent?.trim()) el.setAttribute('aria-label', s); });
   document.documentElement.lang = lang;
   document.title = t('app.title');
