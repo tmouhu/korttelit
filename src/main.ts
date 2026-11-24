@@ -13,11 +13,12 @@ import { register } from 'ol/proj/proj4';
 import { get as getProjection } from 'ol/proj';
 import proj4 from 'proj4';
 import { northInfo } from './core/declination';
-import { applyStatic, getLang, hasKey as dictHas, numberFormat, setLang, t, type Lang, type MessageKey } from './i18n';
+import { applyStatic, formatLength, formatScale, getLang, hasKey as dictHas, numberFormat, setLang, t, type Lang, type MessageKey } from './i18n';
 import { groundSizeM, frameCorners, type PrintSetup, type PaperSize, type Orientation } from './core/printFrame';
 import { lonLatToTM35, TM35FIN_CODE, deg2rad } from './core/projection';
-import { CourseStore, emptyCourse } from './core/course';
+import { CourseStore, crowFlyLength, emptyCourse } from './core/course';
 import { setupCourseUi, setDebugPoints } from './ui/courseUi';
+import { buildShareUrl, decodeShare, encodeShare, payloadFromHash, ShareError, type ShareState } from './core/share';
 import { buildDescriptions, type DescriptionSettings } from './core/descriptions';
 import { sheetSize } from './render/descriptionSheet';
 import { CATALOGUE } from './gen/catalogue';
@@ -91,6 +92,7 @@ function update(rotateView = true): void {
   ];
   $('info').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   updateWarnings();
+  updateInfoChip();
 }
 
 // Mapant coverage (EPSG:3067 extent from its WMS capabilities)
@@ -134,7 +136,7 @@ function showScale(mode: 'state' | 'keep' = 'state'): void {
   if (mode === 'state') scaleSel.value = official ? String(state.scale) : 'custom';
   $('scaleCustomRow').hidden = scaleSel.value !== 'custom';
   if (scaleSel.value === 'custom' && document.activeElement !== scaleCustom) scaleCustom.value = String(state.scale);
-  $('scaleChip').textContent = `1:${state.scale}`;
+  updateInfoChip();
 }
 function applyScale(raw: unknown, announce = false, mode: 'state' | 'keep' = 'state'): void {
   const v = normaliseScale(raw, state.scale);
@@ -290,6 +292,59 @@ void import('./ui/search').then(({ setupSearch }) => setupSearch((pos, place) =>
   status(t('search.moved', { name: place.title }) + (outside ? ` ${t('search.outside')}` : ''));
 }, status));
 
+// ---- sharing as a link (no backend: everything is in the URL fragment) ----
+const shareDialog = $('shareDialog') as HTMLDialogElement, shareLink = $('shareLink') as HTMLInputElement;
+const collectShare = (): ShareState => ({
+  course: store.course,
+  setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, marginMm: state.marginMm, rotation: state.autoRotation ? null : state.manualRotation },
+  desc, north,
+});
+$('shareBtn').addEventListener('click', async () => {
+  const url = buildShareUrl(location.href, await encodeShare(collectShare()));
+  shareLink.value = url;
+  $('shareInfo').textContent = t('share.size', { n: numberFormat(0).format(url.length) }) + (url.length > 2000 ? ` ${t('share.long')}` : '');
+  ($('shareNative') as HTMLButtonElement).hidden = typeof navigator.share !== 'function';
+  shareDialog.showModal(); shareLink.select();
+});
+$('shareCopy').addEventListener('click', async () => {
+  shareLink.select();
+  try { await navigator.clipboard.writeText(shareLink.value); } catch { document.execCommand('copy'); }
+  status(t('share.copied'));
+});
+$('shareNative').addEventListener('click', () => { void navigator.share({ title: store.course.name, url: shareLink.value }).catch(() => undefined); });
+$('shareClose').addEventListener('click', () => shareDialog.close());
+
+function applyShared(s: ShareState): void {
+  Object.assign(state, { centre: s.setup.centre, paper: s.setup.paper, orientation: s.setup.orientation, scale: s.setup.scale, marginMm: s.setup.marginMm, autoRotation: s.setup.rotation === null, manualRotation: s.setup.rotation ?? 0 });
+  Object.assign(desc, s.desc); Object.assign(north, s.north);
+  ($('paper') as HTMLSelectElement).value = state.paper; ($('orientation') as HTMLSelectElement).value = state.orientation;
+  ($('autoRot') as HTMLInputElement).checked = state.autoRotation;
+  ($('descInclude') as HTMLInputElement).checked = desc.include; ($('descCell') as HTMLSelectElement).value = String(desc.cellMm);
+  ($('northOn') as HTMLInputElement).checked = north.on; ($('northSpacing') as HTMLSelectElement).value = String(north.spacingMm);
+  ($('firstNumber') as HTMLInputElement).value = String(s.course.firstNumber);
+  showScale('state');
+  store.commit(s.course);
+  update(); fitToFrame(); save();
+}
+const clearHash = (): void => { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* ignore */ } };
+/** Open a `#share=…` link: validate, ask before replacing existing work, keep a backup of the previous autosave. */
+async function handleShareHash(): Promise<void> {
+  const payload = payloadFromHash(location.hash);
+  if (!payload) return;
+  try {
+    const s = await decodeShare(payload);
+    const hasWork = store.course.controls.length > 0 || !!store.course.start || !!store.course.finish;
+    if (hasWork && !confirm(t('share.confirm', { name: s.course.name }))) { clearHash(); return; }
+    try { const prev = localStorage.getItem(KEY); if (prev) localStorage.setItem('osm-korttelit:backup', prev); } catch { /* ignore */ }
+    applyShared(s);
+    status(t('share.opened', { name: s.course.name }));
+  } catch (e) {
+    status(t(`share.err.${e instanceof ShareError ? e.code : 'invalid'}` as MessageKey));
+  }
+  clearHash();
+}
+window.addEventListener('hashchange', () => { void handleShareHash(); });
+
 // ---- tabs ----
 const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tab]'));
 function showTab(id: string): void {
@@ -300,6 +355,25 @@ function showTab(id: string): void {
 tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab!)));
 let startTab = 'map'; try { startTab = localStorage.getItem('osm-korttelit:tab') ?? 'map'; } catch { /* ignore */ }
 showTab(tabButtons.some((b) => b.dataset.tab === startTab) ? startTab : 'map');
+
+// ---- course length chip (below the scale in the toolbar; only when a course exists) ----
+function updateLengthChip(): void {
+  const len = crowFlyLength(store.course);
+  const el = $('lengthChip');
+  el.hidden = !(len > 0);
+  if (len > 0) el.textContent = formatLength(len);
+  $('infoChip').classList.toggle('only', !(len > 0)); // without a length, paper + scale is the main line
+  updateInfoChip();
+}
+/** Secondary line of the chip: paper size and scale; the compact variant (1:10 k) is shown when the stage is narrow (CSS). */
+function updateInfoChip(): void {
+  const full = `${state.paper} · ${formatScale(state.scale)}`, short = `${state.paper} · ${formatScale(state.scale, true)}`;
+  const chip = $('scaleChip');
+  chip.querySelector('.full')!.textContent = full;
+  chip.querySelector('.compact')!.textContent = short;
+  $('infoChip').setAttribute('aria-label', `${$('lengthChip').hidden ? '' : $('lengthChip').textContent + ', '}${full}`);
+}
+store.subscribe(updateLengthChip); updateLengthChip();
 
 // ---- course rename ----
 const nameInput = $('courseName') as HTMLInputElement;
@@ -404,6 +478,7 @@ $('gen').addEventListener('click', async () => {
 
 showScale();
 update();
+void handleShareHash();
 // On every page load, start at the (restored) frame instead of a fixed location.
 if (map.getSize()?.[0]) fitToFrame(); else map.once('change:size', fitToFrame);
 (window as unknown as { __app: unknown }).__app = { state, map, store };

@@ -5,6 +5,11 @@ const fi = {
   'app.title': 'Korttelit – korttelisuunnistus', 'brand.tagline': 'korttelisuunnistus', 'lang.label': 'Kieli', 'help.open': 'Ohje',
   'tab.map': 'Kartta', 'tab.course': 'Rata', 'tab.generate': 'Luo rata', 'tab.desc': 'Määrite', 'tab.export': 'Vie',
   'scale.custom': 'Oma…', 'scale.customLabel': 'Oma mittakaava 1:', 'scale.hint': 'Jaollinen 100:lla, enintään 1:50000 (ei pienempää).', 'scale.adjusted': 'Mittakaava muutettu arvoon 1:{v} (jaollinen 100:lla, 100–50000).', 'gen.areaTooLarge': 'Alue on liian suuri automaattiselle radalle ({km} km², enintään {max} km²). Valitse pienempi kehys tai suurempi mittakaava.',
+  'length.title': 'Radan pituus (linnuntietä)', 'chip.title': 'Paperikoko ja mittakaava',
+  'share': 'Jaa', 'share.title': 'Jaa kartta ja rata linkkinä', 'share.body': 'Linkki sisältää radan, kartta-alueen ja asetukset. Kuka tahansa linkin saanut voi avata siitä oman kopionsa selaimessaan. Tiedot eivät mene millekään palvelimelle: ne ovat vain linkissä.',
+  'share.copy': 'Kopioi linkki', 'share.native': 'Jaa…', 'share.copied': 'Linkki kopioitu leikepöydälle.', 'share.size': 'Linkin pituus: {n} merkkiä.', 'share.long': 'Pitkä linkki: jotkin viestisovellukset voivat katkaista sen. Vie tällöin rata IOF XML -tiedostona.',
+  'share.confirm': 'Avataanko jaettu rata "{name}"? Nykyinen rata ja kartta-alue korvataan (radan voi palauttaa Kumoa-painikkeella).', 'share.opened': 'Jaettu rata avattu: {name}',
+  'share.err.invalid': 'Linkki on virheellinen tai vioittunut.', 'share.err.unsupported': 'Linkki on tehty uudemmalla versiolla tai selain ei tue sen pakkausta. Päivitä sivu.', 'share.err.too-large': 'Linkki on liian suuri avattavaksi.',
   'search.placeholder': 'Hae paikkaa tai osoitetta', 'search.go': 'Hae', 'search.searching': 'Haetaan…', 'search.none': 'Ei tuloksia haulle "{q}".',
   'search.err.network': 'Haku epäonnistui. Tarkista verkkoyhteys ja yritä uudelleen.', 'search.err.rate-limited': 'Hakuja tehtiin liian tiheään. Yritä minuutin kuluttua uudelleen.', 'search.err.too-short': 'Kirjoita vähintään kaksi merkkiä.',
   'search.moved': 'Kehys siirretty: {name}', 'search.outside': 'Paikka on MapAnt-kartan peittoalueen ulkopuolella.',
@@ -61,6 +66,11 @@ const en: Record<Key, string> = {
   'app.title': 'Korttelit – urban orienteering planner', 'brand.tagline': 'urban orienteering', 'lang.label': 'Language', 'help.open': 'Help',
   'tab.map': 'Map', 'tab.course': 'Course', 'tab.generate': 'Generate', 'tab.desc': 'Descriptions', 'tab.export': 'Export',
   'scale.custom': 'Custom…', 'scale.customLabel': 'Custom scale 1:', 'scale.hint': 'Multiple of 100, at most 1:50000 (nothing smaller).', 'scale.adjusted': 'Scale changed to 1:{v} (multiple of 100, 100–50000).', 'gen.areaTooLarge': 'The area is too large for automatic generation ({km} km², max {max} km²). Choose a smaller frame or a larger scale.',
+  'length.title': 'Course length (as the crow flies)', 'chip.title': 'Paper size and scale',
+  'share': 'Share', 'share.title': 'Share map and course as a link', 'share.body': 'The link contains the course, map area and settings. Anyone with it can open their own copy in their browser. Nothing is sent to a server: the data lives in the link itself.',
+  'share.copy': 'Copy link', 'share.native': 'Share…', 'share.copied': 'Link copied to the clipboard.', 'share.size': 'Link length: {n} characters.', 'share.long': 'Long link: some messaging apps may cut it off. Export the course as IOF XML instead.',
+  'share.confirm': 'Open the shared course "{name}"? Your current course and map area will be replaced (the course can be restored with Undo).', 'share.opened': 'Shared course opened: {name}',
+  'share.err.invalid': 'The link is invalid or damaged.', 'share.err.unsupported': 'The link was made with a newer version, or your browser cannot decompress it. Reload the page.', 'share.err.too-large': 'The link is too large to open.',
   'search.placeholder': 'Search place or address', 'search.go': 'Search', 'search.searching': 'Searching…', 'search.none': 'No results for "{q}".',
   'search.err.network': 'Search failed. Check your connection and try again.', 'search.err.rate-limited': 'Too many searches. Try again in a minute.', 'search.err.too-short': 'Type at least two characters.',
   'search.moved': 'Frame moved: {name}', 'search.outside': 'This place is outside the MapAnt coverage.',
@@ -130,7 +140,20 @@ export function t(key: Key, params: Record<string, string | number> = {}): strin
 export type { Key as MessageKey };
 export const hasKey = (k: string): boolean => k in dicts.fi;
 
-export const numberFormat = (digits = 0): Intl.NumberFormat => new Intl.NumberFormat(lang === 'fi' ? 'fi-FI' : 'en-GB', { maximumFractionDigits: digits });
+/** "1:4000", or compact "1:4 k" (thousands, one decimal at most: 1:7,5 k) when space is short. Scales below 1000 stay as they are. */
+export function formatScale(scale: number, compact = false): string {
+  if (!compact || scale < 1000) return `1:${scale}`;
+  return `1:${numberFormat(1).format(scale / 1000)} k`;
+}
+
+/** Course length for display: metres below 1 km ("850 m"), otherwise kilometres with one decimal ("1,5 km"). */
+export function formatLength(metres: number): string {
+  const m = Math.round(metres);
+  if (m < 1000) return `${numberFormat(0).format(m)} m`;
+  return `${numberFormat(1, true).format(m / 1000)} km`;
+}
+
+export const numberFormat = (digits = 0, fixed = false): Intl.NumberFormat => new Intl.NumberFormat(lang === 'fi' ? 'fi-FI' : 'en-GB', { maximumFractionDigits: digits, ...(fixed ? { minimumFractionDigits: digits } : {}) });
 
 /** Fill elements marked with data-i18n / data-i18n-title in the document. */
 export function applyStatic(root: ParentNode = document): void {

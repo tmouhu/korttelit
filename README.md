@@ -33,6 +33,10 @@ Planning documents (epic, stories, enablers, spike results): [plan/](plan/README
 | i18n (fi/en) | `src/i18n.ts` |
 | Offline (service worker, area prefetch) | `public/sw.js` |
 
+## Sharing
+
+The **Share** button builds a link with the whole map setup and course inside the URL fragment (`#share=…`, deflate-compressed, about 300 characters for a small course). Nothing is sent to a server; opening the link in the app restores a copy. Links are validated strictly (version, ranges, symbol ids, size limits). If you already have a course, the app asks before replacing it and keeps a backup of the previous autosave under `osm-korttelit:backup`. Code: `src/core/share.ts`.
+
 ## Known limits / open items
 
 - **Symbol sizes** for course overprint are provisional (`src/core/symbols.ts`, see `plan/spikes/EN-08-symbol-sizes.md`).

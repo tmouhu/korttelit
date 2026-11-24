@@ -26,6 +26,7 @@
     <div class="top-actions">
       <select id="lang" data-i18n-title="lang.label" class="ghost"><option value="fi">Suomi</option><option value="en">English</option></select>
       <button id="helpBtn" class="ghost" data-i18n="help.open">Ohje</button>
+      <button id="shareBtn" class="ghost" data-i18n-title="share.title"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic"><circle cx="6" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="18" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 10.9 L15.3 7.1 M8.2 13.1 L15.3 16.9" stroke="currentColor" stroke-width="1.8"/></svg><span data-i18n="share">Jaa</span></button>
       <button id="pdf" class="primary" data-i18n="pdf">Lataa PDF</button>
     </div>
   </header>
@@ -156,7 +157,7 @@
             <span data-i18n="tool.finish">Maali</span></label>
         </div>
         <span class="sep"></span>
-        <span id="scaleChip" class="chip" data-i18n-title="scale" aria-live="polite">1:4000</span>
+        <span id="infoChip" class="chip only" aria-live="polite"><b id="lengthChip" data-i18n-title="length.title" hidden></b><small id="scaleChip" data-i18n-title="chip.title"><span class="full"></span><span class="compact"></span></small></span>
         <span class="sep"></span>
         <button id="undo" class="icon" data-i18n-title="undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 L4 12 L9 17 M4 12 H15 A5 5 0 0 1 15 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button id="redo" class="icon" data-i18n-title="redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7 L20 12 L15 17 M20 12 H9 A5 5 0 0 0 9 22" transform="translate(0 -3)" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -165,6 +166,18 @@
       <div id="status" class="toast" role="status"></div>
     </main>
   </div>
+
+  <dialog id="shareDialog" class="info-dialog">
+    <h3 data-i18n="share.title">Jaa linkkinä</h3>
+    <p data-i18n="share.body"></p>
+    <input id="shareLink" type="text" readonly aria-label="Link" />
+    <p id="shareInfo" class="hint"></p>
+    <div class="grid2">
+      <button id="shareCopy" class="primary" data-i18n="share.copy"></button>
+      <button id="shareNative" data-i18n="share.native" hidden></button>
+    </div>
+    <p><button id="shareClose" data-i18n="help.close">Sulje</button></p>
+  </dialog>
 
   <dialog id="help" class="info-dialog">
     <h3 data-i18n="help.title">Ohje</h3>

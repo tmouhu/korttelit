@@ -147,4 +147,22 @@ dialog.desc-editor { max-width: min(96vw, 900px); max-height: 90vh; overflow: au
 }
 @media (max-width: 760px) { #search { top: 68px; } }
 
-.chip { display: inline-flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 8px; background: var(--accent-tint); color: var(--accent-text); font-weight: 800; font-size: 13px; letter-spacing: .01em; white-space: nowrap; }
+
+#top .ic { width: 18px; height: 18px; vertical-align: -4px; margin-right: 6px; }
+#shareLink { margin: 6px 0 4px; font-size: 12px; }
+@media (max-width: 760px) { #shareBtn span { display: none; } #shareBtn .ic { margin: 0; } #shareBtn { padding: 0 8px; } }
+@media (max-width: 480px) {
+  .mark { display: none; }
+  #top select.ghost { width: 80px; font-size: 12px; }
+  .brand { flex: 1 1 auto; min-width: 0; }
+  .word { font-size: 20px; }
+}
+
+/* toolbar chip: course length first (highlighted), paper size and scale below */
+.chip { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 74px; min-height: 40px; padding: 3px 12px; border-radius: 8px; background: var(--accent-tint); color: var(--accent-text); line-height: 1.15; white-space: nowrap; }
+.chip b { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+.chip b[hidden] { display: none; }
+.chip small { font-size: 11px; font-weight: 600; opacity: .8; }
+.chip.only small { font-size: 13px; font-weight: 800; opacity: 1; }
+.chip .compact { display: none; }
+@container (max-width: 520px) { .chip .full { display: none; } .chip .compact { display: inline; } }
