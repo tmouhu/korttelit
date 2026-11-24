@@ -154,7 +154,7 @@ export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOpti
   }
 
   // number halos first (white stroke), then the course on top
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('helvetica', 'normal');
   for (const { prim: p } of scene) {
     if (p.kind !== 'text') continue;
     doc.setFontSize((p.sizeMm * 72) / 25.4);

@@ -64,7 +64,7 @@ describe('symbol scene', () => {
     c = addControl(c, { e: 0, n: 400 });
     const txt = buildCourseScene(c, setup).find((i) => i.prim.kind === 'text')!.prim as Extract<ReturnType<typeof buildCourseScene>[0]['prim'], { kind: 'text' }>;
     expect(txt.text).toBe('1');
-    expect(txt.haloMm).toBe(0.8);
+    expect(txt.haloMm).toBeCloseTo(0.3, 9); // 0.15 mm visible outside the glyph, like the course-line outline
     expect(Math.abs(txt.x)).toBeGreaterThan(3); // not on the vertical leg
   });
   it('auto label angle avoids incident legs', () => {

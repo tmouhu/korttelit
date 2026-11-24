@@ -19,6 +19,9 @@ export interface SymbolSpec {
   labelGapMm: number;
 }
 
+/** White outline under course lines and around control numbers: this much is visible on each side (a thin line only). */
+export const LINE_HALO_MM = 0.15;
+
 const BASE: SymbolSpec = {
   lineWidthMm: 0.35,
   controlOuterDiameterMm: 6.0,
@@ -26,8 +29,8 @@ const BASE: SymbolSpec = {
   finishInnerOuterDiameterMm: 5.0,
   startTriangleSideMm: 7.0,
   numberHeightMm: 4.0,
-  numberHaloMm: 0.8,
-  labelGapMm: 0.6,
+  numberHaloMm: 2 * LINE_HALO_MM, // stroke width centred on the glyph outline → LINE_HALO_MM visible outside it, same as the line outline
+  labelGapMm: 1.2, // distance between the control circle and its number
 };
 
 /** Per-scale overrides / enlargement factors (all 1.0 until verified). */
@@ -44,8 +47,6 @@ export const COURSE_COLOUR = '#b3128c';
 /** Magnetic north lines: blue, 0.15 mm. */
 export const NORTH_LINE_COLOUR = '#1f5fb4';
 export const NORTH_LINE_MM = 0.15;
-/** Optional white outline under course lines: this much on each side of the stroke (a thin line only). */
-export const LINE_HALO_MM = 0.15;
 
 export type Prim =
   | { kind: 'ring'; x: number; y: number; r: number; width: number }          // r = centre-line radius

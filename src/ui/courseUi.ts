@@ -90,7 +90,7 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
     for (const { prim: p } of scene) {
       if (p.kind !== 'text') continue;
       const [x, y] = paperToPx(p.x, p.y);
-      ctx.font = `bold ${p.sizeMm * k}px Arial, Helvetica, sans-serif`;
+      ctx.font = `${p.sizeMm * k}px Arial, Helvetica, sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
       ctx.strokeStyle = '#fff'; ctx.lineWidth = p.haloMm * k;
       ctx.strokeText(p.text, x, y + (symbolSpecFor(getSetup().scale).numberHeightMm * k) / 2);
@@ -110,7 +110,7 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
         ctx.stroke();
       } else {
         const [x, y] = paperToPx(p.x, p.y);
-        ctx.font = `bold ${p.sizeMm * k}px Arial, Helvetica, sans-serif`;
+        ctx.font = `${p.sizeMm * k}px Arial, Helvetica, sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
         ctx.fillText(p.text, x, y + (symbolSpecFor(getSetup().scale).numberHeightMm * k) / 2);
       }
