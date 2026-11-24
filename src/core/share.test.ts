@@ -9,7 +9,7 @@ const sample = (): ShareState => {
   c = setFinish(c, { e: 385800.5, n: 6672300.2 });
   c.controls[0] = { ...c.controls[0]!, kind: 'building_corner', dirGridDeg: 135.55, locked: true, desc: { d: '5.12', g: '' } };
   c.controls[1] = { ...c.controls[1]!, labelAngleDeg: 200, kind: 'path_junction' };
-  return { course: c, setup: { centre: { e: 385611.3, n: 6672118.4 }, paper: 'A3', orientation: 'landscape', scale: 7300, marginMm: 10, rotation: null }, desc: { include: true, x: -92, y: -135.5, cellMm: 7 }, north: { on: true, spacingMm: 40 } };
+  return { course: c, setup: { centre: { e: 385611.3, n: 6672118.4 }, paper: 'A3', orientation: 'landscape', scale: 7300, marginMm: 10, rotation: null }, desc: { include: true, x: -92, y: -135.5, cellMm: 7 }, north: { on: true, spacingMm: 40 }, lineHalo: true };
 };
 const round1 = (v: number): number => Math.round(v * 10) / 10;
 
@@ -29,6 +29,13 @@ describe('share links', () => {
     expect(back.setup).toEqual({ centre: { e: 385611.3, n: 6672118.4 }, paper: 'A3', orientation: 'landscape', scale: 7300, marginMm: 10, rotation: null });
     expect(back.desc).toEqual(s.desc);
     expect(back.north).toEqual(s.north);
+    expect(back.lineHalo).toBe(true);
+  });
+  it('treats a missing halo flag as off (older links) and rejects bad values', () => {
+    const w = toWire({ ...sample(), lineHalo: false }) as unknown as Record<string, any>;
+    expect(w.h).toBeUndefined();
+    expect(fromWire(w).lineHalo).toBe(false);
+    expect(() => fromWire({ ...w, h: 'yes' })).toThrow(ShareError);
   });
   it('keeps a typical course short enough for a link (12 controls < 1500 characters)', async () => {
     expect((await encodeShare(sample())).length).toBeLessThan(1500);

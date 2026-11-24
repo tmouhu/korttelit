@@ -8,7 +8,7 @@ import { drawSheet, sheetSize, sheetSymbolIds } from '../render/descriptionSheet
 import { ensureSymbols } from '../render/symbols';
 import { CATALOGUE } from '../gen/catalogue';
 import { getLang, numberFormat, t } from '../i18n';
-import { buildCourseScene, COURSE_COLOUR, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor, type SceneItem } from '../core/symbols';
+import { buildCourseScene, COURSE_COLOUR, LINE_HALO_MM, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor, type SceneItem } from '../core/symbols';
 
 let debugPoints: [number, number, string][] = [];
 let debugOn = false;
@@ -29,8 +29,9 @@ const sameRef = (a: PointRef | null, b: PointRef | null): boolean => !!a && !!b 
 export interface DescAccess { get: () => DescriptionSettings; set: (d: DescriptionSettings) => void }
 
 export interface NorthLines { on: boolean; spacingMm: number }
+export interface CourseStyle { lineHalo: boolean }
 
-export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: CourseStore, onSetupRequest: () => void, desc: DescAccess, getNorth: () => NorthLines): void {
+export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: CourseStore, onSetupRequest: () => void, desc: DescAccess, getNorth: () => NorthLines, getStyle: () => CourseStyle): void {
   let tool: Tool = 'control';
   let selected: PointRef | null = null;
 
@@ -71,6 +72,19 @@ export function setupCourseUi(map: Map, getSetup: () => PrintSetup, store: Cours
       ctx.save(); ctx.strokeStyle = NORTH_LINE_COLOUR; ctx.lineWidth = Math.max(1, NORTH_LINE_MM * k); ctx.beginPath();
       for (const x of northLineXs(getSetup(), nl.spacingMm)) { const p = paperToPx(x, -a.h / 2), q = paperToPx(x, a.h / 2); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); }
       ctx.stroke(); ctx.restore();
+    }
+    // optional thin white outline under the course lines (below everything else of the course)
+    if (getStyle().lineHalo) {
+      ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineJoin = 'miter';
+      for (const { prim: p } of scene) {
+        if (p.kind === 'text') continue;
+        ctx.lineWidth = Math.max((p.width + 2 * LINE_HALO_MM) * k, p.width * k + 1);
+        ctx.beginPath();
+        if (p.kind === 'ring') { const [x, y] = paperToPx(p.x, p.y); ctx.arc(x, y, p.r * k, 0, Math.PI * 2); }
+        else { p.pts.forEach(([px, py], i) => { const [x, y] = paperToPx(px, py); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }); if (p.closed) ctx.closePath(); }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     // white halos first so no number is covered by another number's halo
     for (const { prim: p } of scene) {

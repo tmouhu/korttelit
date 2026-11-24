@@ -13,6 +13,8 @@ export interface ShareState {
   setup: { centre: TM35; paper: PaperSize; orientation: Orientation; scale: number; marginMm: number; /** null = automatic (magnetic north up) */ rotation: number | null };
   desc: DescriptionSettings;
   north: { on: boolean; spacingMm: number };
+  /** thin white outline under course lines */
+  lineHalo: boolean;
 }
 
 export type ShareErrorCode = 'invalid' | 'unsupported' | 'too-large';
@@ -34,6 +36,7 @@ interface Wire {
   m: { c: Pos; p: PaperSize; o: 'p' | 'l'; sc: number; mg: number; r: number | null };
   d: { i: 0 | 1; x: number; y: number; c: 5 | 6 | 7 };
   nl: { on: 0 | 1; sp: number };
+  h?: 1;
 }
 const r1 = (v: number): number => Math.round(v * 10) / 10;
 const pos = (p: TM35): Pos => [r1(p.e), r1(p.n)];
@@ -52,6 +55,7 @@ export function toWire(s: ShareState): Wire {
     m: { c: pos(s.setup.centre), p: s.setup.paper, o: s.setup.orientation === 'portrait' ? 'p' : 'l', sc: s.setup.scale, mg: s.setup.marginMm, r: s.setup.rotation === null ? null : r1(s.setup.rotation) },
     d: { i: s.desc.include ? 1 : 0, x: r1(s.desc.x), y: r1(s.desc.y), c: s.desc.cellMm },
     nl: { on: s.north.on ? 1 : 0, sp: s.north.spacingMm },
+    ...(s.lineHalo ? { h: 1 as const } : {}),
   };
 }
 
@@ -103,6 +107,7 @@ export function fromWire(w: unknown): ShareState {
     setup: { centre: pos2(m.c), paper: p, orientation: o, scale: normaliseScale(num(m.sc, 1, 1e7)), marginMm: num(m.mg, 0, 30), rotation: m.r === null ? null : num(m.r, -180, 180) },
     desc: { include: d.i === 1, x: num(d.x, -1000, 1000), y: num(d.y, -1000, 1000), cellMm: cell },
     north: { on: nl.on === 1, spacingMm: num(nl.sp, 10, 100) },
+    lineHalo: w.h === undefined ? false : w.h === 1 ? true : bad(),
   };
 }
 

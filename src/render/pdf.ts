@@ -5,11 +5,11 @@ import { frameBBox, groundToPaper, mapAreaMm, northLineXs, PAPER_MM, sheetMm, wm
 import { buildDescriptions, type DescriptionSettings } from '../core/descriptions';
 import { drawSheet, sheetSize, sheetSymbolIds } from './descriptionSheet';
 import { ensureSymbols } from './symbols';
-import { buildCourseScene, COURSE_COLOUR, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor } from '../core/symbols';
+import { buildCourseScene, COURSE_COLOUR, LINE_HALO_MM, NORTH_LINE_COLOUR, NORTH_LINE_MM, symbolSpecFor } from '../core/symbols';
 
 export const MAPANT_WMS = 'https://www.mapant.fi/wms/wms.php';
 
-export interface PdfOptions { dpi: number; onProgress?: (msg: string) => void; includeMap?: boolean; north?: { on: boolean; spacingMm: number }; description?: { settings: DescriptionSettings; ownPage: boolean } }
+export interface PdfOptions { dpi: number; onProgress?: (msg: string) => void; includeMap?: boolean; north?: { on: boolean; spacingMm: number }; lineHalo?: boolean; description?: { settings: DescriptionSettings; ownPage: boolean } }
 export interface PdfResult { blob: Blob; warnings: string[] }
 
 export function wmsUrl(b: { minE: number; minN: number; maxE: number; maxN: number }, w: number, h: number): string {
@@ -136,6 +136,22 @@ export async function exportPdf(course: Course, setup: PrintSetup, opts: PdfOpti
   const [r, g, b] = hexToRgb(COURSE_COLOUR);
   const scene = buildCourseScene(course, setup, symbolSpecFor(setup.scale));
   doc.setLineCap('butt'); doc.setLineJoin('round');
+
+  // optional thin white outline under the course lines
+  if (opts.lineHalo) {
+    doc.setDrawColor(255, 255, 255); doc.setLineJoin('miter');
+    for (const { prim: p } of scene) {
+      if (p.kind === 'text') continue;
+      doc.setLineWidth(p.width + 2 * LINE_HALO_MM);
+      if (p.kind === 'ring') doc.circle(ox + p.x, oy + p.y, p.r, 'S');
+      else {
+        const pts = p.pts.map(([x, y]) => [ox + x, oy + y] as const);
+        if (p.closed) { const segs = pts.slice(1).map((q, i) => [q[0] - pts[i]![0], q[1] - pts[i]![1]]); doc.lines(segs, pts[0]![0], pts[0]![1], [1, 1], 'S', true); }
+        else doc.line(pts[0]![0], pts[0]![1], pts[1]![0], pts[1]![1]);
+      }
+    }
+    doc.setLineJoin('round');
+  }
 
   // number halos first (white stroke), then the course on top
   doc.setFont('helvetica', 'bold');

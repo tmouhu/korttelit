@@ -179,12 +179,14 @@ const KEY = 'osm-korttelit:v1';
 const store = new CourseStore(emptyCourse(t('course.default')));
 const defaultDescPos = (): { x: number; y: number } => { const a = mapAreaMm(state); return { x: -a.w / 2 + 3, y: -a.h / 2 + 3 }; };
 const north = { on: true, spacingMm: 50 };
+const style = { lineHalo: false };
 const desc: DescriptionSettings = { include: false, ...defaultDescPos(), cellMm: 6 };
 try {
   const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
   if (saved?.course) store.course = saved.course;
   if (saved?.desc) Object.assign(desc, saved.desc);
   if (saved?.north) Object.assign(north, saved.north);
+  if (saved?.style) Object.assign(style, saved.style);
   if (saved?.setup) {
     const s = saved.setup;
     Object.assign(state, { centre: s.centre ?? state.centre, paper: s.paper ?? state.paper, orientation: s.orientation ?? state.orientation, scale: normaliseScale(s.scale, state.scale), autoRotation: s.autoRotation ?? true, manualRotation: s.manualRotation ?? 0 });
@@ -195,7 +197,7 @@ try {
   }
 } catch { /* ignore */ }
 function save(): void {
-  try { localStorage.setItem(KEY, JSON.stringify({ course: store.course, desc, north, setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, autoRotation: state.autoRotation, manualRotation: state.manualRotation } })); } catch { /* ignore */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ course: store.course, desc, north, style, setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, autoRotation: state.autoRotation, manualRotation: state.manualRotation } })); } catch { /* ignore */ }
 }
 const baseUpdate = update;
 const descInfo = (): void => {
@@ -212,7 +214,9 @@ const descInfo = (): void => {
   $('descInfo').innerHTML = lines.map((l) => l.replace(/&/g, '&amp;').replace(/</g, '&lt;')).join('<br>');
 };
 const descAccess = { get: () => desc, set: (d: DescriptionSettings) => { Object.assign(desc, d); } };
-setupCourseUi(map, () => state, store, () => { save(); map.render(); descInfo(); }, descAccess, () => north);
+setupCourseUi(map, () => state, store, () => { save(); map.render(); descInfo(); }, descAccess, () => north, () => style);
+($('lineHalo') as HTMLInputElement).checked = style.lineHalo;
+$('lineHalo').addEventListener('change', (e) => { style.lineHalo = (e.target as HTMLInputElement).checked; save(); map.render(); });
 ($('northOn') as HTMLInputElement).checked = north.on;
 ($('northSpacing') as HTMLSelectElement).value = String(north.spacingMm);
 $('northOn').addEventListener('change', (e) => { north.on = (e.target as HTMLInputElement).checked; save(); map.render(); });
@@ -247,7 +251,7 @@ $('pdf').addEventListener('click', async () => {
   const btn = $('pdf') as HTMLButtonElement; btn.disabled = true;
   try {
     const { exportPdf } = await import('./render/pdf');
-    const res = await exportPdf(store.course, { ...state, northGridBearingDeg: state.northGridBearingDeg }, { dpi: Number(($('dpi') as HTMLSelectElement).value), onProgress: status, north, description: { settings: desc, ownPage: ($('descPage') as HTMLInputElement).checked } });
+    const res = await exportPdf(store.course, { ...state, northGridBearingDeg: state.northGridBearingDeg }, { dpi: Number(($('dpi') as HTMLSelectElement).value), onProgress: status, north, lineHalo: style.lineHalo, description: { settings: desc, ownPage: ($('descPage') as HTMLInputElement).checked } });
     download(res.blob, `${fileBase()}_${state.paper}_1-${state.scale}.pdf`);
     status(res.warnings.includes('course-outside-frame') ? t('pdf.outside') : t('pdf.done'));
   } catch (e) { status(t('pdf.failed', { msg: (e as Error).message === 'map-image-failed' ? t('pdf.mapFailed') : (e as Error).message })); }
@@ -297,7 +301,7 @@ const shareDialog = $('shareDialog') as HTMLDialogElement, shareLink = $('shareL
 const collectShare = (): ShareState => ({
   course: store.course,
   setup: { centre: state.centre, paper: state.paper, orientation: state.orientation, scale: state.scale, marginMm: state.marginMm, rotation: state.autoRotation ? null : state.manualRotation },
-  desc, north,
+  desc, north, lineHalo: style.lineHalo,
 });
 $('shareBtn').addEventListener('click', async () => {
   const url = buildShareUrl(location.href, await encodeShare(collectShare()));
@@ -316,7 +320,8 @@ $('shareClose').addEventListener('click', () => shareDialog.close());
 
 function applyShared(s: ShareState): void {
   Object.assign(state, { centre: s.setup.centre, paper: s.setup.paper, orientation: s.setup.orientation, scale: s.setup.scale, marginMm: s.setup.marginMm, autoRotation: s.setup.rotation === null, manualRotation: s.setup.rotation ?? 0 });
-  Object.assign(desc, s.desc); Object.assign(north, s.north);
+  Object.assign(desc, s.desc); Object.assign(north, s.north); style.lineHalo = s.lineHalo;
+  ($('lineHalo') as HTMLInputElement).checked = style.lineHalo;
   ($('paper') as HTMLSelectElement).value = state.paper; ($('orientation') as HTMLSelectElement).value = state.orientation;
   ($('autoRot') as HTMLInputElement).checked = state.autoRotation;
   ($('descInclude') as HTMLInputElement).checked = desc.include; ($('descCell') as HTMLSelectElement).value = String(desc.cellMm);

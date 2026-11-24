@@ -44,6 +44,8 @@ export const COURSE_COLOUR = '#b3128c';
 /** Magnetic north lines: blue, 0.15 mm. */
 export const NORTH_LINE_COLOUR = '#1f5fb4';
 export const NORTH_LINE_MM = 0.15;
+/** Optional white outline under course lines: this much on each side of the stroke (a thin line only). */
+export const LINE_HALO_MM = 0.15;
 
 export type Prim =
   | { kind: 'ring'; x: number; y: number; r: number; width: number }          // r = centre-line radius
